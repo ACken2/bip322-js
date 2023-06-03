@@ -1,0 +1,27 @@
+{
+    "name": "bip322",
+    "version": "0.0.1",
+    "description": "A BIP-322 utilities library",
+    "main": "index.js",
+    "scripts": {
+        "test": "ts-mocha test/**/*.test.ts"
+    },
+    "keywords": [
+        "bip322",
+        "bitcoinjs",
+        "javascript",
+        "typescript",
+        "no-WASM"
+    ],
+    "author": "Ken Sze <acken2@outlook.com>",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/chai": "^4.3.5",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "^20.2.5",
+        "chai": "^4.3.7",
+        "mocha": "^10.2.0",
+        "ts-mocha": "^10.0.0",
+        "typescript": "^5.1.3"
+    }
+}
