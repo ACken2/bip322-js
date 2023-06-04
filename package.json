@@ -4,6 +4,7 @@
     "description": "A BIP-322 utilities library",
     "main": "index.js",
     "scripts": {
+        "build": "tsc",
         "test": "ts-mocha test/**/*.test.ts"
     },
     "keywords": [
@@ -20,8 +21,14 @@
         "@types/mocha": "^10.0.1",
         "@types/node": "^20.2.5",
         "chai": "^4.3.7",
+        "ecpair": "^2.1.0",
         "mocha": "^10.2.0",
         "ts-mocha": "^10.0.0",
         "typescript": "^5.1.3"
+    },
+    "dependencies": {
+        "@bitcoinerlab/secp256k1": "^1.0.2",
+        "bitcoinjs-lib": "^6.1.1",
+        "fast-sha256": "^1.3.0"
     }
 }
