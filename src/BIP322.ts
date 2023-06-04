@@ -1,4 +1,5 @@
 // Import dependencies
+import Helper from "./Helper";
 import { Hash } from "fast-sha256";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
@@ -113,12 +114,12 @@ class BIP322 {
      */
     public static encodeWitness(witnesses: Uint8Array[]) {
         // Store the current witness stack
-        // The first element to be included is the length of the witness array
-        let witnessStack = Buffer.from([witnesses.length]);
+        // The first element to be included is the length of the witness array as VarInt
+        let witnessStack = Helper.encodeVarInt(witnesses.length);
         // Then, for each witness array,
         witnesses.forEach((witness) => {
             // Append the length of the witness, and then its entire content to the witness stack
-            witnessStack = Buffer.concat([witnessStack, Buffer.from([witness.length]), witness]);
+            witnessStack = Buffer.concat([ witnessStack, Helper.encodeVarStr(Buffer.from(witness)) ]);
         });
         // Return the base-64 encoded witness stack
         return witnessStack.toString('base64');
