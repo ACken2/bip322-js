@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "build": "tsc",
-        "test": "ts-mocha test/**/*.test.ts"
+        "test": "ts-mocha 'test/**/*.test.ts'"
     },
     "keywords": [
         "bip322",

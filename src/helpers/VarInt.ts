@@ -1,15 +1,16 @@
 /**
- * Class that provide generic utilities used by other classes.
+ * Class that implement variable length integer (VarInt) in Javascript. 
+ * Reference: https://en.bitcoin.it/wiki/Protocol_documentation#Variable_length_integer
  */
-class Helper {
+class VarInt {
 
     /**
-     * Encode an integer i as a varint.
+     * Encode an integer i as a variable length integer.
      * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L180
      * @param i Integer to be encoded
      * @returns Encoded varint
      */
-    public static encodeVarInt(i: number) {
+    public static encode(i: number) {
         if (i < 0xFD) {
             const buffer = Buffer.alloc(1);
             buffer.writeUInt8(i);
@@ -41,12 +42,12 @@ class Helper {
     }
 
     /**
-     * Convert a variable integer from a Buffer into a number.
+     * Decode a variable length integer from a Buffer into a number.
      * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L160
-     * @param b Buffer which contain the VarInt
+     * @param b Buffer which contain the varint
      * @returns Decoded number
      */
-    public static readVarInt(b: Buffer) {
+    public static decode(b: Buffer) {
         // Check for empty buffer
         if (b.byteLength === 0) {
             throw new Error('Empty buffer provided');
@@ -72,32 +73,6 @@ class Helper {
         }
     }
 
-    /**
-     * Encode a string buffer as a varstr.
-     * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L203
-     * @param s String buffer to be encoded
-     * @returns Encoded varstr
-     */
-    public static encodeVarStr(s: Buffer) {
-        // Encode the length of the string using encodeVarInt
-        const lengthBuffer = this.encodeVarInt(s.length);
-        // Concat the actual string right after the length of the string
-        return Buffer.concat([lengthBuffer, s]);
-    }
-
-    /**
-     * Convert a variable string from a Buffer into a string buffer.
-     * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L194
-     * @param v Varstr to be decoded
-     * @returns Decoded string buffer
-     */
-    public static readVarStr(v: Buffer) {
-        // Find the length of the string by using read_varint on the string
-        const length = this.readVarInt(v);
-        // Return the last 'length' bytes in the buffer which contain the actual string
-        return v.subarray(-length);
-    }
-
 }
 
-export default Helper;
+export default VarInt;
