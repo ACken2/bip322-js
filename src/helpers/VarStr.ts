@@ -29,8 +29,10 @@ class VarStr {
     public static decode(v: Buffer) {
         // Find the length of the string by using read_varint on the string
         const length = VarInt.decode(v);
-        // Return the last 'length' bytes in the buffer which contain the actual string
-        return v.subarray(-length);
+        // Get the length of the VarInt used to represent the length of the string
+        const lengthByteLength = VarInt.encode(length).byteLength;
+        // Return from lengthByteLength to (length + lengthByteLength) in the buffer which contain the actual string
+        return v.subarray(lengthByteLength, length + lengthByteLength);
     }
 
 }
