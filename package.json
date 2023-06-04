@@ -21,6 +21,7 @@
         "@types/mocha": "^10.0.1",
         "@types/node": "^20.2.5",
         "chai": "^4.3.7",
+        "chai-bytes": "^0.1.2",
         "ecpair": "^2.1.0",
         "mocha": "^10.2.0",
         "ts-mocha": "^10.0.0",
