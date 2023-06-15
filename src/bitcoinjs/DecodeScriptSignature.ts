@@ -26,7 +26,7 @@ function fromDER(x: Buffer): Buffer {
     return buffer;
 }
 
-function decode2(buffer) {
+function decode2(buffer: Buffer) {
     if (buffer.length < 8) throw new Error('DER sequence length is too short');
     if (buffer.length > 72) throw new Error('DER sequence length is too long');
     if (buffer[0] !== 0x30) throw new Error('Expected DER sequence');
