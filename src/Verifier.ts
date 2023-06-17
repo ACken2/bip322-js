@@ -16,7 +16,7 @@ class Verifier {
      * @param message message_challenge signed by the address 
      * @param signatureBase64 Signature produced by the signing address
      * @returns True if the provided signature is a valid BIP-322 signature for the given message and address, false if otherwise
-     * @throws If the provided signature is invalid for the given address, or if unsupported address and signature are provided
+     * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
     public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
         // Convert address into corresponding script pubkey
@@ -52,7 +52,7 @@ class Verifier {
             }
             // Check if OP_HASH160(publicKey) === hashedPubkeyInScriptPubkey
             if (Buffer.compare(hashedPubkey, hashedPubkeyInScriptPubkey) !== 0) {
-                throw new Error('Invalid public key listed in witness data.');
+                return false; // Reject signature if the hashed public key did not match
             }
             // Computing OP_CHECKSIG in Javascript
             return ecc.verify(hashToSign, publicKey, signature);
@@ -82,7 +82,7 @@ class Verifier {
             }
             else {
                 // Fail validation if the signature is not 64 or 65 bytes
-                throw new Error('Incorrect Schnorr signature provided for corresponding Taproot address.');
+                throw new Error('Invalid Schnorr signature provided.');
             }
             // Computing OP_CHECKSIG in Javascript
             return ecc.verifySchnorr(hashToSign, publicKey, signature);
@@ -232,7 +232,7 @@ class Verifier {
         // But, in BIP-341, SIGHASH_DEFAULT (0x00) is equivalent to SIGHASH_ALL (0x01) so both should be allowed 
         if (hashType !== bitcoin.Transaction.SIGHASH_DEFAULT && hashType !== bitcoin.Transaction.SIGHASH_ALL) {
             // Throw error if hashType is neither SIGHASH_DEFAULT or SIGHASH_ALL
-            throw new Error('Invalid SIGHASH used in signature.');
+            throw new Error('Invalid SIGHASH used in signature. Must be either SIGHASH_ALL or SIGHASH_DEFAULT.');
         }
         // Return computed transaction hash to be signed
         return toSignTx.extractTransaction().hashForWitnessV1(
