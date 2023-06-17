@@ -43,7 +43,7 @@ class Verifier {
             if (this.isNestedP2WPKH(signerAddress)) {
                 // P2SH-P2WPKH verification path
                 // Compute the hash that correspond to the toSignTx
-                hashToSign = this.getHashForSigP2SHInP2WPKH(toSignTx, publicKey);
+                hashToSign = this.getHashForSigP2SHInP2WPKH(toSignTx, hashedPubkey);
                 // The original locking script for P2SH-P2WPKH is OP_0 <PubKeyHash>
                 const lockingScript = Buffer.concat([ Buffer.from([0x00, 0x14]), hashedPubkey ]);
                 // Compute OP_HASH160(lockingScript)
@@ -235,16 +235,16 @@ class Verifier {
     /**
      * Compute the hash to be signed for a given P2SH-P2WPKH BIP-322 toSign transaction.
      * @param toSignTx PSBT instance of the toSign transaction
-     * @param publicKey Public key of the signing address
+     * @param hashedPubkey Hashed public key of the signing address
      * @returns Computed transaction hash that requires signing
      */
-    private static getHashForSigP2SHInP2WPKH(toSignTx: bitcoin.Psbt, publicKey: Buffer) {
+    private static getHashForSigP2SHInP2WPKH(toSignTx: bitcoin.Psbt, hashedPubkey: Buffer) {
         // Create a signing script to unlock the P2WPKH output based on the P2PKH template
         // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/ts_src/psbt.ts#L1654
         // Like P2WPKH, the hash for deriving the meaningfulScript for a P2SH-P2WPKH transaction is its public key hash
         // It can be derived by hashing the provided public key in the witness stack
         const signingScript = bitcoin.payments.p2pkh({ 
-            hash: bitcoin.crypto.hash160(publicKey)
+            hash: hashedPubkey
         }).output;
         // Return computed transaction hash to be signed 
         return toSignTx.extractTransaction().hashForWitnessV0(
