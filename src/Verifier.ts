@@ -11,105 +11,116 @@ import { decodeScriptSignature } from './bitcoinjs';
 class Verifier {
 
     /**
-     * Verify a BIP-322 signature.
+     * Verify a BIP-322 signature from P2WPKH, P2SH-P2WPKH, and single-key-spend P2TR address.
      * @param signerAddress Address of the signing address
      * @param message message_challenge signed by the address 
      * @param signatureBase64 Signature produced by the signing address
      * @returns True if the provided signature is a valid BIP-322 signature for the given message and address, false if otherwise
+     * @throws If the provided signature is invalid for the given address, or if unsupported address and signature are provided
      */
     public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
-        try {
-            // Convert address into corresponding script pubkey
-            const scriptPubKey = this.convertAdressToScriptPubkey(signerAddress);
-            // Draft corresponding toSpend and toSign transaction using the message and script pubkey
-            const toSpendTx = BIP322.buildToSpendTx(message, scriptPubKey);
-            const toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey);
-            // Add the witness stack into the toSignTx
-            toSignTx.updateInput(0, {
-                finalScriptWitness: Buffer.from(signatureBase64, 'base64')
-            });
-            // Obtain the signature within the witness components
-            const witness = toSignTx.extractTransaction().ins[0].witness;
-            const encodedSignature = witness[0];
-            // Branch depending on whether the signing address is a non-taproot or a taproot address
-            if (!this.isTaprootAddress(signerAddress)) {
-                // For non-taproot segwit transaciton, public key is included as the second part of the witness data
-                const publicKey = witness[1];
-                const { signature } = decodeScriptSignature(encodedSignature);
-                // Compute the hash that correspond to the toSignTx
-                const hashToSign = this.getHashForSig(toSignTx);
-                // Compute OP_HASH160(publicKey)
-                const hashedPubkey = bitcoin.crypto.hash160(publicKey);
-                // Extract public key hash from scriptPubkey 
-                let hashedPubkeyInScriptPubkey: Buffer;
-                if (this.isNestedP2WPKH(signerAddress, witness)) {
-                    // For nested segwit (P2SH-P2WPKH) address, the hashed public key is located from the 3rd byte to the last 2nd byte as OP_HASH160 <HASH> OP_EQUAL
-                    hashedPubkeyInScriptPubkey = scriptPubKey.subarray(2, -1);
-                }
-                else {
-                    // For native segwit address, the hashed public key is located from the 3rd to the end as OP_0 <HASH>
-                    hashedPubkeyInScriptPubkey = scriptPubKey.subarray(2);
-                }
-                // Check if OP_HASH160(publicKey) === hashedPubkeyInScriptPubkey
-                if (Buffer.compare(hashedPubkey, hashedPubkeyInScriptPubkey) !== 0) {
-                    throw new Error('Invalid public key listed in witness data.');
-                }
-                // Computing OP_CHECKSIG in Javascript
-                return ecc.verify(hashToSign, publicKey, signature);
+        // Convert address into corresponding script pubkey
+        const scriptPubKey = this.convertAdressToScriptPubkey(signerAddress);
+        // Draft corresponding toSpend and toSign transaction using the message and script pubkey
+        const toSpendTx = BIP322.buildToSpendTx(message, scriptPubKey);
+        const toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey);
+        // Add the witness stack into the toSignTx
+        toSignTx.updateInput(0, {
+            finalScriptWitness: Buffer.from(signatureBase64, 'base64')
+        });
+        // Obtain the signature within the witness components
+        const witness = toSignTx.extractTransaction().ins[0].witness;
+        const encodedSignature = witness[0];
+        // Branch depending on whether the signing address is a non-taproot or a taproot address
+        if (this.isP2WPKH(witness)) {
+            // For non-taproot segwit transaciton, public key is included as the second part of the witness data
+            const publicKey = witness[1];
+            const { signature } = decodeScriptSignature(encodedSignature);
+            // Compute the hash that correspond to the toSignTx
+            const hashToSign = this.getHashForSig(toSignTx);
+            // Compute OP_HASH160(publicKey)
+            const hashedPubkey = bitcoin.crypto.hash160(publicKey);
+            // Extract public key hash from scriptPubkey 
+            let hashedPubkeyInScriptPubkey: Buffer;
+            if (this.isNestedP2WPKH(signerAddress)) {
+                // For nested segwit (P2SH-P2WPKH) address, the hashed public key is located from the 3rd byte to the last 2nd byte as OP_HASH160 <HASH> OP_EQUAL
+                hashedPubkeyInScriptPubkey = scriptPubKey.subarray(2, -1);
             }
             else {
-                // For taproot address, the public key is located starting from the 3rd byte of the script public key
-                const publicKey = scriptPubKey.subarray(2);
-                // Compute the hash to be signed by the signing address
-                // Reference: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#user-content-Taproot_key_path_spending_signature_validation
-                let hashToSign: Buffer;
-                let signature: Buffer;
-                if (encodedSignature.byteLength === 64) {
-                    // If a BIP-341 signature is 64 bytes, the signature is signed using SIGHASH_DEFAULT 0x00 
-                    hashToSign = this.getTaprootHashForSig(toSignTx, 0x00);
-                    // And the entirety of the encoded signature is the actual signature
-                    signature = encodedSignature; 
-                }
-                else if (encodedSignature.byteLength === 65) {
-                    // If a BIP-341 signature is 65 bytes, the signature is signed using SIGHASH included at the last byte of the signature
-                    hashToSign = this.getTaprootHashForSig(toSignTx, encodedSignature[64]);
-                    // And encodedSignature[0:64] holds the actual signature
-                    signature = encodedSignature.subarray(0, -1);
-                }
-                else {
-                    // Fail validation if the signature is not 64 or 65 bytes
-                    throw new Error('Incorrect Schnorr signature provided for Taproot address.');
-                }
-                // Computing OP_CHECKSIG in Javascript
-                return ecc.verifySchnorr(hashToSign, publicKey, signature);
+                // For native segwit address, the hashed public key is located from the 3rd to the end as OP_0 <HASH>
+                hashedPubkeyInScriptPubkey = scriptPubKey.subarray(2);
             }
-        } catch (err) {
-            console.error(err);
+            // Check if OP_HASH160(publicKey) === hashedPubkeyInScriptPubkey
+            if (Buffer.compare(hashedPubkey, hashedPubkeyInScriptPubkey) !== 0) {
+                throw new Error('Invalid public key listed in witness data.');
+            }
+            // Computing OP_CHECKSIG in Javascript
+            return ecc.verify(hashToSign, publicKey, signature);
+        }
+        else if (this.isTaprootAddress(signerAddress)) {
+            // Check if the witness stack correspond to a single-key-spend P2TR address
+            if (!this.isSingleKeyTaproot(witness)) {
+                throw new Error('BIP-322 verification from script-spend P2TR is unsupported');
+            }
+            // For taproot address, the public key is located starting from the 3rd byte of the script public key
+            const publicKey = scriptPubKey.subarray(2);
+            // Compute the hash to be signed by the signing address
+            // Reference: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#user-content-Taproot_key_path_spending_signature_validation
+            let hashToSign: Buffer;
+            let signature: Buffer;
+            if (encodedSignature.byteLength === 64) {
+                // If a BIP-341 signature is 64 bytes, the signature is signed using SIGHASH_DEFAULT 0x00 
+                hashToSign = this.getTaprootHashForSig(toSignTx, 0x00);
+                // And the entirety of the encoded signature is the actual signature
+                signature = encodedSignature; 
+            }
+            else if (encodedSignature.byteLength === 65) {
+                // If a BIP-341 signature is 65 bytes, the signature is signed using SIGHASH included at the last byte of the signature
+                hashToSign = this.getTaprootHashForSig(toSignTx, encodedSignature[64]);
+                // And encodedSignature[0:64] holds the actual signature
+                signature = encodedSignature.subarray(0, -1);
+            }
+            else {
+                // Fail validation if the signature is not 64 or 65 bytes
+                throw new Error('Incorrect Schnorr signature provided for corresponding Taproot address.');
+            }
+            // Computing OP_CHECKSIG in Javascript
+            return ecc.verifySchnorr(hashToSign, publicKey, signature);
+        }
+        else {
+            throw new Error('Only P2WPKH, P2SH-P2WPKH, and single-key-spend P2TR BIP-322 verification is supported. Unsupported address is provided.');
+        }
+    }
+
+    /**
+     * Check if a given witness stack corresponds to a P2WPKH address.
+     * @param witness Witness data associated with the toSign BIP-322 transaction
+     * @returns True if the provided address and witness stack correspond to a valid P2WPKH address, false if otherwise
+     */
+    private static isP2WPKH(witness: Buffer[]) {
+        // Check whether the witness stack is as expected for a P2WPKH address
+        // It should contain exactly two items, with the second item being a public key with 33 bytes, and the first byte must be either 0x02/0x03
+        if (witness.length === 2 && witness[1].byteLength === 33 && (witness[1][0] === 0x02 || witness[1][0] === 0x03)) {
+            return true;
+        }
+        else {
             return false;
         }
     }
 
     /**
      * Check if a given Bitcoin address is a nested segwit (P2SH-P2WPKH) address.
+     * This function assumes the address is either a nested segwit (P2SH-P2WPKH) or native segwit (P2WPKH) address.
      * @param address Bitcoin address to be checked
-     * @param witness Witness data associated with the toSign BIP-322 transaction
      * @returns True if the provided address and witness stack correspond to a valid P2SH-P2WPKH address, false if otherwise
-     * @throws Error when the provided address is a P2SH address but not a valid P2SH-P2WPKH
      */
-    private static isNestedP2WPKH(address: string, witness: Buffer[]) {
+    private static isNestedP2WPKH(address: string) {
         // Check if the provided address is a P2SH address
         if (address[0] === '3' || address[0] === '2') {
-            // Check whether the witness stack is as expected for a P2SH-P2WPKH address
-            // It should contain exactly two items, with the second item being a public key with 33 bytes, and the first byte must be either 0x02/0x03
-            if (witness.length === 2 && witness[1].byteLength === 33 && (witness[1][0] === 0x02 || witness[1][0] === 0x03)) {
-                return true;
-            }
-            else {
-                throw new Error('Unsupported P2SH address provided'); // Unknown P2SH address
-            }
+            return true; // Assume it is a P2SH-P2WPKH address
         }
         else {
-            return false; // Other supported non-P2SH-P2WPKH address
+            return false; // Assume it is a P2WPKH address
         }
     }
 
@@ -121,6 +132,22 @@ class Verifier {
     private static isTaprootAddress(address: string) {
         if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
             return true; // is taproot address
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * Check if a given witness stack corresponds to a single-key-spend P2TR address.
+     * @param witness Witness data associated with the toSign BIP-322 transaction
+     * @returns True if the provided address and witness stack correspond to a valid single-key-spend P2TR address, false if otherwise
+     */
+    private static isSingleKeyTaproot(witness: Buffer[]) {
+        // Check whether the witness stack is as expected for a single-key-spend taproot address
+        // It should contain exactly one items which is the signature for the transaction
+        if (witness.length === 1) {
+            return true;
         }
         else {
             return false;
