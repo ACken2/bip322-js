@@ -72,7 +72,7 @@ class Verifier {
         else if (this.isTaprootAddress(signerAddress)) {
             // Check if the witness stack correspond to a single-key-spend P2TR address
             if (!this.isSingleKeyTaproot(witness)) {
-                throw new Error('BIP-322 verification from script-spend P2TR is unsupported');
+                throw new Error('BIP-322 verification from script-spend P2TR is unsupported.');
             }
             // For taproot address, the public key is located starting from the 3rd byte of the script public key
             const publicKey = scriptPubKey.subarray(2);
