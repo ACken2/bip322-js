@@ -58,7 +58,7 @@ describe('Verifier Test', () => {
         // Sign the toSign transaction
         const toSignTxSigned = toSignTx.signAllInputs(testPrivateKey).finalizeAllInputs();
         // Extract the signature
-        const signature = toSignTxSigned.data.inputs[0].finalScriptWitness?.toString('base64') as string;
+        const signature = BIP322.encodeWitness(toSignTxSigned);
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signature); // Everything correct
@@ -153,7 +153,7 @@ describe('Verifier Test', () => {
         // Sign the toSign transaction
         const toSignTxSigned = toSignTx.signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_DEFAULT]).finalizeAllInputs();
         // Extract the signature
-        const signature = toSignTxSigned.data.inputs[0].finalScriptWitness?.toString('base64') as string;
+        const signature = BIP322.encodeWitness(toSignTxSigned);
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signature); // Everything correct
@@ -263,26 +263,31 @@ describe('Verifier Test', () => {
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft, sign the toSign transaction, and extract the signature using different SIGHASH
-        const signatureAnyOneCanPay = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
-            .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_ANYONECANPAY })
-            .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_ANYONECANPAY]).finalizeAllInputs()
-            .data.inputs[0].finalScriptWitness?.toString('base64') as string;
-        const signatureInputMask = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
-            .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_INPUT_MASK })
-            .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_INPUT_MASK]).finalizeAllInputs()
-            .data.inputs[0].finalScriptWitness?.toString('base64') as string;
-        const signatureNone = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
-            .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_NONE })
-            .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_NONE]).finalizeAllInputs()
-            .data.inputs[0].finalScriptWitness?.toString('base64') as string;
-        const signatureOutputMask = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
-            .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_OUTPUT_MASK })
-            .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_OUTPUT_MASK]).finalizeAllInputs()
-            .data.inputs[0].finalScriptWitness?.toString('base64') as string;
-        const signatureSingle = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
-            .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_SINGLE })
-            .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_SINGLE]).finalizeAllInputs()
-            .data.inputs[0].finalScriptWitness?.toString('base64') as string;
+        const signatureAnyOneCanPay = BIP322.encodeWitness(
+            BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
+                .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_ANYONECANPAY })
+                .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_ANYONECANPAY]).finalizeAllInputs()
+        );
+        const signatureInputMask = BIP322.encodeWitness(
+            BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
+                .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_INPUT_MASK })
+                .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_INPUT_MASK]).finalizeAllInputs()
+        );
+        const signatureNone = BIP322.encodeWitness(
+            BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
+                .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_NONE })
+                .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_NONE]).finalizeAllInputs()
+        );
+        const signatureOutputMask = BIP322.encodeWitness(
+            BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
+                .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_OUTPUT_MASK })
+                .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_OUTPUT_MASK]).finalizeAllInputs()
+        );
+        const signatureSingle = BIP322.encodeWitness(
+            BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey)
+                .updateInput(0, { sighashType: bitcoin.Transaction.SIGHASH_SINGLE })
+                .signAllInputs(testPrivateKeyTweaked, [bitcoin.Transaction.SIGHASH_SINGLE]).finalizeAllInputs()
+        );
 
         // Act
         const resultAnyOneCanPay = Verifier.verifySignature.bind(Verifier, address, messageHelloWorld, signatureAnyOneCanPay);

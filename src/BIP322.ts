@@ -1,5 +1,4 @@
 // Import dependencies
-import { VarInt, VarStr } from "./helpers";
 import { Hash } from "fast-sha256";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
@@ -118,25 +117,21 @@ class BIP322 {
     }
 
     /**
-     * Encode array of witness into its base-64 encoded format.
-     * Follows the encoding scheme found in buidl-python:
-     *      https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/witness.py#L35
-     *      https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L203
-     *      https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/helper.py#L180
-     * @param witnesses Array of witness data
+     * Encode witness stack in a signed BIP-322 PSBT into its base-64 encoded format.
+     * @param signedPsbt Signed PSBT
      * @returns Base-64 encoded witness data
      */
-    public static encodeWitness(witnesses: Uint8Array[]) {
-        // Store the current witness stack
-        // The first element to be included is the length of the witness array as VarInt
-        let witnessStack = VarInt.encode(witnesses.length);
-        // Then, for each witness array,
-        witnesses.forEach((witness) => {
-            // Append the length of the witness, and then its entire content to the witness stack
-            witnessStack = Buffer.concat([ witnessStack, VarStr.encode(Buffer.from(witness)) ]);
-        });
-        // Return the base-64 encoded witness stack
-        return witnessStack.toString('base64');
+    public static encodeWitness(signedPsbt: bitcoin.Psbt) {
+        // Obtain the signed witness data
+        const witness = signedPsbt.data.inputs[0].finalScriptWitness;
+        // Check if the witness data is present
+        if (witness) {
+            // Return the base-64 encoded witness stack
+            return witness.toString('base64');
+        }
+        else {
+            throw new Error('Cannot encode empty witness stack.');
+        }
     }
 
 }
