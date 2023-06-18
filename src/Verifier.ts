@@ -195,13 +195,15 @@ class Verifier {
      * @throws Error when the provided address is not a valid Bitcoin address
      */
     private static convertAdressToScriptPubkey(address: string) {
+        /* Unused paths
         if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
             // P2PKH address
             return bitcoin.payments.p2pkh({
                 address: address
             }).output as Buffer;
         }
-        else if (address[0] === '3' || address[0] === '2') {
+        else */
+        if (address[0] === '3' || address[0] === '2') {
             // P2SH address
             return bitcoin.payments.p2sh({
                 address: address
