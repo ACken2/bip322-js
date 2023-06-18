@@ -76,9 +76,10 @@ class BIP322 {
      * @param toSpendTxId Transaction ID of the to_spend transaction as constructed by buildToSpendTx
      * @param witnessScript The script public key for the signing wallet, or the redeemScript for P2SH-P2WPKH address
      * @param isRedeemScript Set to true if the provided witnessScript is a redeemScript for P2SH-P2WPKH address, default to false
+     * @param tapInternalKey Used to set the taproot internal public key of a taproot signing address when provided, default to undefined
      * @returns Ready-to-be-signed bitcoinjs.Psbt transaction
      */
-    public static buildToSignTx(toSpendTxId: string, witnessScript: Buffer, isRedeemScript: boolean = false) {
+    public static buildToSignTx(toSpendTxId: string, witnessScript: Buffer, isRedeemScript: boolean = false, tapInternalKey: Buffer = undefined) {
         // Initialize Bitcoin lib
         bitcoin.initEccLib(ecc);
         // Create PSBT object for constructing the transaction
@@ -100,6 +101,12 @@ class BIP322 {
         if (isRedeemScript) {
             psbt.updateInput(0, {
                 redeemScript: witnessScript
+            });
+        }
+        // Set tapInternalKey if provided
+        if (tapInternalKey) {
+            psbt.updateInput(0, {
+                tapInternalKey: tapInternalKey
             });
         }
         // Set the output
