@@ -2,6 +2,7 @@
 import BIP322 from "./BIP322";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
+import * as bitcoinMessage from 'bitcoinjs-message';
 import { decodeScriptSignature } from './bitcoinjs';
 
 /**
@@ -19,6 +20,11 @@ class Verifier {
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
     public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
+        // Handle legacy P2PKH signature
+        if (this.isP2PKH(signerAddress)) {
+            // For P2PKH address, assume the signature is a legacy signature
+            return bitcoinMessage.verify(message, signerAddress, signatureBase64);
+        } 
         // Convert address into corresponding script pubkey
         const scriptPubKey = this.convertAdressToScriptPubkey(signerAddress);
         // Draft corresponding toSpend and toSign transaction using the message and script pubkey
@@ -105,9 +111,24 @@ class Verifier {
     }
 
     /**
+     * Check if a given witness stack corresponds to a P2PKH address.
+     * @param address Bitcoin address to be checked
+     * @returns True if the provided address correspond to a valid P2PKH address, false if otherwise
+     */
+    private static isP2PKH(address: string) {
+        // Check if the provided address is a P2PKH address
+        if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
+            return true; // P2PKH address
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
      * Check if a given witness stack corresponds to a P2WPKH address.
      * @param witness Witness data associated with the toSign BIP-322 transaction
-     * @returns True if the provided address and witness stack correspond to a valid P2WPKH address, false if otherwise
+     * @returns True if the provided witness stack correspond to a valid P2WPKH address, false if otherwise
      */
     private static isP2WPKH(witness: Buffer[]) {
         // Check whether the witness stack is as expected for a P2WPKH address
@@ -124,7 +145,7 @@ class Verifier {
      * Check if a given Bitcoin address is a nested segwit (P2SH-P2WPKH) address.
      * This function assumes the address is either a nested segwit (P2SH-P2WPKH) or native segwit (P2WPKH) address.
      * @param address Bitcoin address to be checked
-     * @returns True if the provided address and witness stack correspond to a valid P2SH-P2WPKH address, false if otherwise
+     * @returns True if the provided address correspond to a valid P2SH-P2WPKH address, false if otherwise
      */
     private static isNestedP2WPKH(address: string) {
         // Check if the provided address is a P2SH address
