@@ -38,4 +38,8 @@ describe('VarInt Test', () => {
         expect(VarInt.decode(Buffer.from([0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00]))).to.equal(0x0000FFFF00000000);
     });
 
+    it('Throw when encoding an empty Buffer', () => {
+        expect(VarInt.decode.bind(VarInt, Buffer.alloc(0))).to.throws('Empty buffer provided');
+    });
+
 });

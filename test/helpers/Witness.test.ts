@@ -23,8 +23,16 @@ describe('Witness Test', () => {
         expect(encoded).to.equal(encodedWitness);
     });
 
-    it('Decode encoded witness correctly', () => {
+    it('Decode encoded witness correctly when given a base-64 encoded string', () => {
         const decoded = Witness.deserialize(encodedWitness);
+        expect(decoded.length).to.equal(witnessStack.length);
+        for (let i=0; i<decoded.length; i++) {
+            expect(decoded[i]).to.equalBytes(witnessStack[i]);
+        }
+    });
+
+    it('Decode encoded witness correctly when given a Buffer', () => {
+        const decoded = Witness.deserialize(Buffer.from(encodedWitness, 'base64'));
         expect(decoded.length).to.equal(witnessStack.length);
         for (let i=0; i<decoded.length; i++) {
             expect(decoded[i]).to.equalBytes(witnessStack[i]);
