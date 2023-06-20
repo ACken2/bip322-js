@@ -1,5 +1,6 @@
 // Import dependencies
 import BIP322 from "./BIP322";
+import { Address } from "./helpers";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import * as bitcoinMessage from 'bitcoinjs-message';
@@ -21,12 +22,12 @@ class Verifier {
      */
     public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
         // Handle legacy P2PKH signature
-        if (this.isP2PKH(signerAddress)) {
+        if (Address.isP2PKH(signerAddress)) {
             // For P2PKH address, assume the signature is a legacy signature
             return bitcoinMessage.verify(message, signerAddress, signatureBase64);
         } 
         // Convert address into corresponding script pubkey
-        const scriptPubKey = this.convertAdressToScriptPubkey(signerAddress);
+        const scriptPubKey = Address.convertAdressToScriptPubkey(signerAddress);
         // Draft corresponding toSpend and toSign transaction using the message and script pubkey
         const toSpendTx = BIP322.buildToSpendTx(message, scriptPubKey);
         const toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey);
@@ -38,7 +39,7 @@ class Verifier {
         const witness = toSignTx.extractTransaction().ins[0].witness;
         const encodedSignature = witness[0];
         // Branch depending on whether the signing address is a non-taproot or a taproot address
-        if (this.isP2WPKH(witness)) {
+        if (Address.isP2WPKH(witness)) {
             // For non-taproot segwit transaciton, public key is included as the second part of the witness data
             const publicKey = witness[1];
             const { signature } = decodeScriptSignature(encodedSignature);
@@ -46,7 +47,7 @@ class Verifier {
             const hashedPubkey = bitcoin.crypto.hash160(publicKey);
             // Common path variable
             let hashToSign: Buffer; // Hash expected to be signed by the signing address
-            if (this.isNestedP2WPKH(signerAddress)) {
+            if (Address.isP2SH(signerAddress)) {
                 // P2SH-P2WPKH verification path
                 // Compute the hash that correspond to the toSignTx
                 hashToSign = this.getHashForSigP2SHInP2WPKH(toSignTx, hashedPubkey);
@@ -75,9 +76,9 @@ class Verifier {
             // Computing OP_CHECKSIG in Javascript
             return ecc.verify(hashToSign, publicKey, signature);
         }
-        else if (this.isTaprootAddress(signerAddress)) {
+        else if (Address.isP2TR(signerAddress)) {
             // Check if the witness stack correspond to a single-key-spend P2TR address
-            if (!this.isSingleKeyTaproot(witness)) {
+            if (!Address.isSingleKeyP2TR(witness)) {
                 throw new Error('BIP-322 verification from script-spend P2TR is unsupported.');
             }
             // For taproot address, the public key is located starting from the 3rd byte of the script public key
@@ -108,131 +109,6 @@ class Verifier {
         else {
             throw new Error('Only P2WPKH, P2SH-P2WPKH, and single-key-spend P2TR BIP-322 verification is supported. Unsupported address is provided.');
         }
-    }
-
-    /**
-     * Check if a given witness stack corresponds to a P2PKH address.
-     * @param address Bitcoin address to be checked
-     * @returns True if the provided address correspond to a valid P2PKH address, false if otherwise
-     */
-    private static isP2PKH(address: string) {
-        // Check if the provided address is a P2PKH address
-        if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
-            return true; // P2PKH address
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * Check if a given witness stack corresponds to a P2WPKH address.
-     * @param witness Witness data associated with the toSign BIP-322 transaction
-     * @returns True if the provided witness stack correspond to a valid P2WPKH address, false if otherwise
-     */
-    private static isP2WPKH(witness: Buffer[]) {
-        // Check whether the witness stack is as expected for a P2WPKH address
-        // It should contain exactly two items, with the second item being a public key with 33 bytes, and the first byte must be either 0x02/0x03
-        if (witness.length === 2 && witness[1].byteLength === 33 && (witness[1][0] === 0x02 || witness[1][0] === 0x03)) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * Check if a given Bitcoin address is a nested segwit (P2SH-P2WPKH) address.
-     * This function assumes the address is either a nested segwit (P2SH-P2WPKH) or native segwit (P2WPKH) address.
-     * @param address Bitcoin address to be checked
-     * @returns True if the provided address correspond to a valid P2SH-P2WPKH address, false if otherwise
-     */
-    private static isNestedP2WPKH(address: string) {
-        // Check if the provided address is a P2SH address
-        if (address[0] === '3' || address[0] === '2') {
-            return true; // Assume it is a P2SH-P2WPKH address
-        }
-        else {
-            return false; // Assume it is a P2WPKH address
-        }
-    }
-
-    /**
-     * Check if a given Bitcoin address is a taproot address.
-     * @param address Bitcoin address to be checked
-     * @returns True if the provided address is a taproot address, false if otherwise
-     */
-    private static isTaprootAddress(address: string) {
-        if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
-            return true; // is taproot address
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * Check if a given witness stack corresponds to a single-key-spend P2TR address.
-     * @param witness Witness data associated with the toSign BIP-322 transaction
-     * @returns True if the provided address and witness stack correspond to a valid single-key-spend P2TR address, false if otherwise
-     */
-    private static isSingleKeyTaproot(witness: Buffer[]) {
-        // Check whether the witness stack is as expected for a single-key-spend taproot address
-        // It should contain exactly one items which is the signature for the transaction
-        if (witness.length === 1) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * Convert a given Bitcoin address into its corresponding script public key.
-     * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/script.py#L607
-     * @param address Bitcoin address
-     * @returns Script public key of the given Bitcoin address
-     * @throws Error when the provided address is not a valid Bitcoin address
-     */
-    private static convertAdressToScriptPubkey(address: string) {
-        /* Unused paths
-        if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
-            // P2PKH address
-            return bitcoin.payments.p2pkh({
-                address: address
-            }).output as Buffer;
-        }
-        else */
-        if (address[0] === '3' || address[0] === '2') {
-            // P2SH address
-            return bitcoin.payments.p2sh({
-                address: address
-            }).output as Buffer;
-        }
-        else if (address.slice(0, 4) === 'bc1q' || address.slice(0, 4) === 'tb1q') {
-            // P2WPKH or P2WSH address
-            if (address.length === 42) {
-                // P2WPKH address
-                return bitcoin.payments.p2wpkh({
-                    address: address
-                }).output as Buffer;
-            }
-            else if (address.length === 62) {
-                // P2WSH address
-                return bitcoin.payments.p2wsh({
-                    address: address
-                }).output as Buffer;
-            }
-        }
-        else if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
-            if (address.length === 62) {
-                // P2TR address
-                return bitcoin.payments.p2tr({
-                    address: address
-                }).output as Buffer;
-            }
-        }
-        throw new Error("Unknown address type");
     }
 
     /**

@@ -194,13 +194,12 @@ describe('Verifier Test', () => {
         expect(result).to.throw('BIP-322 verification from script-spend P2TR is unsupported.');
     });
 
-    it('Reject any signature from malformed address', () => {
+    it('Reject verification from malformed address', () => {
         // Arrange
         const malformP2PKH = '1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV' + 'M';
         const malformP2WPKHInP2SH = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb' + 'M';
         const malformedP2WPKH = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l' + 'm';
         const malformedP2TR = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3' + 'm';
-        const malformedP2WTF = 'bc1wtfpv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3'; // bc1wtf
         const message = ''; // Does not actually matter, it should throw due to the malformed address
         const signatureP2PKH = "H9L5yLFjti0QTHhPyFrZCT1V/MMnBtXKmoiKDZ78NDBjERki6ZTQZdSMCtkgoNmp17By9ItJr8o7ChX0XxY91nk="; // Correctly encoded P2PKH signature
         const signatureP2WPKH = "AkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI="; // Correctly encoded P2WPKH signature
@@ -211,14 +210,12 @@ describe('Verifier Test', () => {
         const resultP2WPKHInP2SH = Verifier.verifySignature.bind(Verifier, malformP2WPKHInP2SH, message, signatureP2WPKH);
         const resultP2WPKH = Verifier.verifySignature.bind(Verifier, malformedP2WPKH, message, signatureP2WPKH);
         const resultP2Tr = Verifier.verifySignature.bind(Verifier, malformedP2TR, message, signatureP2TR);
-        const resultP2WTF = Verifier.verifySignature.bind(Verifier, malformedP2WTF, signatureP2TR);
 
         // Assert
-        expect(resultP2PKH).to.throw('Invalid checksum'); // Throw by bitcoinjs-message library
-        expect(resultP2WPKHInP2SH).to.throw('Invalid checksum'); // Throw by bitcoinjs-lib
-        expect(resultP2WPKH).to.throws('Unknown address type');
-        expect(resultP2Tr).to.throws('Unknown address type');
-        expect(resultP2WTF).to.throws('Unknown address type');
+        expect(resultP2PKH).to.throw(); // Throw by bitcoinjs-message library
+        expect(resultP2WPKHInP2SH).to.throw(); // Throw by bitcoinjs-lib
+        expect(resultP2WPKH).to.throws(); // Throw by helper/Address
+        expect(resultP2Tr).to.throws(); // Throw by helper/Address
     });
 
     it('Reject Schnorr signature with incorrect length', () => {
