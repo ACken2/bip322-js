@@ -39,7 +39,7 @@ class Verifier {
         const witness = toSignTx.extractTransaction().ins[0].witness;
         const encodedSignature = witness[0];
         // Branch depending on whether the signing address is a non-taproot or a taproot address
-        if (Address.isP2WPKH(witness)) {
+        if (Address.isP2WPKHWitness(witness)) {
             // For non-taproot segwit transaciton, public key is included as the second part of the witness data
             const publicKey = witness[1];
             const { signature } = decodeScriptSignature(encodedSignature);
@@ -78,7 +78,7 @@ class Verifier {
         }
         else if (Address.isP2TR(signerAddress)) {
             // Check if the witness stack correspond to a single-key-spend P2TR address
-            if (!Address.isSingleKeyP2TR(witness)) {
+            if (!Address.isSingleKeyP2TRWitness(witness)) {
                 throw new Error('BIP-322 verification from script-spend P2TR is unsupported.');
             }
             // For taproot address, the public key is located starting from the 3rd byte of the script public key

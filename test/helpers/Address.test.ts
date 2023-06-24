@@ -1,6 +1,8 @@
 // Import dependencies
 import { expect, use } from 'chai';
 import chaibytes from "chai-bytes";
+import ECPairFactory from 'ecpair';
+import ecc from '@bitcoinerlab/secp256k1';
 
 // Import module to be tested
 import { Address } from '../../src/helpers';
@@ -87,6 +89,34 @@ describe('Address Test', () => {
             expect(p2trTestnetResult).to.be.false;
         });
 
+        it('Classify if a given address is a P2WPKH address correctly', () => {
+            // Act
+            const p2pkhMainnetResult = Address.isP2WPKH(p2pkhMainnet);
+            const p2pkhTestnetResult = Address.isP2WPKH(p2pkhTestnet);
+            const p2pkhTestnetIIResult = Address.isP2WPKH(p2pkhTestnetII);
+            const p2shMainnetResult = Address.isP2WPKH(p2shMainnet);
+            const p2shTestnetResult = Address.isP2WPKH(p2shTestnet);
+            const p2wpkhMainnetResult = Address.isP2WPKH(p2wpkhMainnet);
+            const p2wpkhTestnetResult = Address.isP2WPKH(p2wpkhTestnet);
+            const p2wshMainnetResult = Address.isP2WPKH(p2wshMainnet);
+            const p2wshTestnetResult = Address.isP2WPKH(p2wshTestnet);
+            const p2trMainnetResult = Address.isP2WPKH(p2trMainnet);
+            const p2trTestnetResult = Address.isP2WPKH(p2trTestnet);
+
+            // Assert
+            expect(p2pkhMainnetResult).to.be.false;
+            expect(p2pkhTestnetResult).to.be.false;
+            expect(p2pkhTestnetIIResult).to.be.false;
+            expect(p2shMainnetResult).to.be.false;
+            expect(p2shTestnetResult).to.be.false;
+            expect(p2wpkhMainnetResult).to.be.true;
+            expect(p2wpkhTestnetResult).to.be.true;
+            expect(p2wshMainnetResult).to.be.false;
+            expect(p2wshTestnetResult).to.be.false;
+            expect(p2trMainnetResult).to.be.false;
+            expect(p2trTestnetResult).to.be.false;
+        });
+
         it('Classify if a given address is a P2TR address correctly', () => {
             // Act
             const p2pkhMainnetResult = Address.isP2TR(p2pkhMainnet);
@@ -143,10 +173,10 @@ describe('Address Test', () => {
 
         it('Classify P2WPKH witness stack correctly', () => {
             // Act
-            const witnessP2WPKHResult = Address.isP2WPKH(witnessP2WPKH);
-            const witnessP2WSHResult = Address.isP2WPKH(witnessP2WSH);
-            const witnessSingleKeyP2TRResult = Address.isP2WPKH(witnessSingleKeyP2TR);
-            const witnessScriptP2TRResult = Address.isP2WPKH(witnessScriptP2TR);
+            const witnessP2WPKHResult = Address.isP2WPKHWitness(witnessP2WPKH);
+            const witnessP2WSHResult = Address.isP2WPKHWitness(witnessP2WSH);
+            const witnessSingleKeyP2TRResult = Address.isP2WPKHWitness(witnessSingleKeyP2TR);
+            const witnessScriptP2TRResult = Address.isP2WPKHWitness(witnessScriptP2TR);
 
             // Assert
             expect(witnessP2WPKHResult).to.be.true;
@@ -157,10 +187,10 @@ describe('Address Test', () => {
 
         it('Classify single-key-spend P2TR witness stack correctly', () => {
             // Act
-            const witnessP2WPKHResult = Address.isSingleKeyP2TR(witnessP2WPKH);
-            const witnessP2WSHResult = Address.isSingleKeyP2TR(witnessP2WSH);
-            const witnessSingleKeyP2TRResult = Address.isSingleKeyP2TR(witnessSingleKeyP2TR);
-            const witnessScriptP2TRResult = Address.isSingleKeyP2TR(witnessScriptP2TR);
+            const witnessP2WPKHResult = Address.isSingleKeyP2TRWitness(witnessP2WPKH);
+            const witnessP2WSHResult = Address.isSingleKeyP2TRWitness(witnessP2WSH);
+            const witnessSingleKeyP2TRResult = Address.isSingleKeyP2TRWitness(witnessSingleKeyP2TR);
+            const witnessScriptP2TRResult = Address.isSingleKeyP2TRWitness(witnessScriptP2TR);
 
             // Assert
             expect(witnessP2WPKHResult).to.be.false;
@@ -269,6 +299,63 @@ describe('Address Test', () => {
             expect(p2trMainnetMalformedResult).to.throws('Unknown address type');
             expect(p2trTestnetMalformedResult).to.throws('Unknown address type');
             expect(p2wtfMalformedResult).to.throws('Unknown address type');
+        });
+
+    });
+
+    describe('Public Key to Addres Function', () => {
+
+        it('Convert valid public key into correct Bitcoin address', () => {
+            // Arrange
+            // Extract public key from private key
+            const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
+            const ECPair = ECPairFactory(ecc);
+            const signer = ECPair.fromWIF(privateKey);
+            const publicKey = signer.publicKey;
+            // Expected address for the private key L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k
+            const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
+            const p2pkhAddressTestnet = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+            const p2shAddress = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb';
+            const p2shAddressTestnet = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+            const p2wpkhAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l';
+            const p2wpkhAddressTestnet = 'tb1q9vza2e8x573nczrlzms0wvx3gsqjx7vaxwd45v';
+            const p2trAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
+            const p2trAddressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
+
+            // Act
+            const p2pkhAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
+            const p2shAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh');
+            const p2wpkhAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh');
+            const p2trAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2tr');
+            const p2trAddressGeneratedInternalPubKey = Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr');
+
+            // Assert
+            expect(p2pkhAddressGenerated.mainnet).to.equal(p2pkhAddress);
+            expect(p2pkhAddressGenerated.testnet).to.equal(p2pkhAddressTestnet);
+            expect(p2shAddressGenerated.mainnet).to.equal(p2shAddress);
+            expect(p2shAddressGenerated.testnet).to.equal(p2shAddressTestnet);
+            expect(p2wpkhAddressGenerated.mainnet).to.equal(p2wpkhAddress);
+            expect(p2wpkhAddressGenerated.testnet).to.equal(p2wpkhAddressTestnet);
+            expect(p2trAddressGenerated.mainnet).to.equal(p2trAddress);
+            expect(p2trAddressGenerated.testnet).to.equal(p2trAddressTestnet);
+            expect(p2trAddressGeneratedInternalPubKey.mainnet).to.equal(p2trAddress);
+            expect(p2trAddressGeneratedInternalPubKey.testnet).to.equal(p2trAddressTestnet);
+        });
+
+        it('Throw when handling invalid address type', () => {
+            // Arrange
+            // Extract public key from private key
+            const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
+            const ECPair = ECPairFactory(ecc);
+            const signer = ECPair.fromWIF(privateKey);
+            const publicKey = signer.publicKey;
+
+            // Act
+            // @ts-ignore
+            const p2wtfAddress = Address.convertPubKeyIntoAddress.bind(publicKey, 'p2wtf');
+
+            // Assert
+            expect(p2wtfAddress).to.throws('Cannot convert public key into unsupported address type.');
         });
 
     });
