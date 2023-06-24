@@ -17,12 +17,13 @@ class Signer {
      * @param privateKey Private key used to sign the message
      * @param address Address to be signing the message
      * @param message message_challenge to be signed by the address 
+     * @param network Network that the address is located, defaults to the Bitcoin mainnet
      * @returns BIP-322 simple signature, encoded in base-64
      */
-    public static sign(privateKey: string, address: string, message: string) {
+    public static sign(privateKey: string, address: string, message: string, network: bitcoin.Network = bitcoin.networks.bitcoin) {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
-        let signer = ECPair.fromWIF(privateKey);
+        let signer = ECPair.fromWIF(privateKey, network);
         // Check if the private key can sign message for the given address
         if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address)) {
             throw new Error(`Invalid private key provided for signing message for ${address}.`);
@@ -43,7 +44,8 @@ class Signer {
             // P2SH-P2WPKH signing path
             // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
             const redeemScript = bitcoin.payments.p2wpkh({
-                hash: bitcoin.crypto.hash160(signer.publicKey)
+                hash: bitcoin.crypto.hash160(signer.publicKey),
+                network: network
             }).output as Buffer;
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
@@ -60,10 +62,6 @@ class Signer {
             signer = signer.tweak(
                 bitcoin.crypto.taggedHash('TapTweak', signer.publicKey.subarray(1, 33))
             );
-            // Obtain the script public key
-            const scriptPubKey = bitcoin.payments.p2tr({
-                address: address
-            }).output as Buffer;
             // Draft a toSign transaction that spends toSpend transaction
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey);
             // Set the sighashType to bitcoin.Transaction.SIGHASH_ALL since it defaults to SIGHASH_DEFAULT
