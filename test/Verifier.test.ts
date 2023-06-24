@@ -16,20 +16,28 @@ describe('Verifier Test', () => {
         // Arrange
         // Test vector copied from https://github.com/bitcoinjs/bitcoinjs-message/blob/c43430f4c03c292c719e7801e425d887cbdf7464/README.md?plain=1#L21
         const address = "1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV";
+        const addressTestnet = 'muZpTpBYhxmRFuCjLc7C6BBDF32C8XVJUi';
         const addressWrong = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2";
+        const addressWrongTestnet = 'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn';
         const message = "This is an example of a signed message.";
         const messageWrong = "";
         const signature = "H9L5yLFjti0QTHhPyFrZCT1V/MMnBtXKmoiKDZ78NDBjERki6ZTQZdSMCtkgoNmp17By9ItJr8o7ChX0XxY91nk=";
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, message, signature); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, message, signature); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signature); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, message, signature); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressWrongTestnet, message, signature); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
+        expect(resultCorrectTestnet).to.be.true;
         expect(resultWrongMessage).to.be.false;
+        expect(resultWrongMessageTestnet).to.be.false;
         expect(resultWrongAddress).to.be.false;
+        expect(resultWrongAddressTestnet).to.be.false;
     });
 
     it('Can verify and falsify BIP-322 signature for P2SH-P2WPKH address', () => {
@@ -37,7 +45,9 @@ describe('Verifier Test', () => {
         // Constants
         const privateKey = "KwTbAxmBXjoZM3bzbXixEr9nxLhyYSM4vp2swet58i19bw9sqk5z"; // Private key of "3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f", also serve to test public key that begins with 0x03
         const address = "3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f"; // Derived from the private key above
+        const addressTestnet = '2N8zi3ydDsMnVkqaUUe5Xav6SZqhyqEduap'; // Derived from the private key above
         const addressWrong = "342ftSRCvFHfCeFFBuz4xwbeqnDw6BGUey";
+        const addressTestnetWrong = '2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc';
         const messageWrong = "";
         const messageHelloWorld = "Hello World";
         // Initialize private key used to sign the transaction
@@ -62,20 +72,28 @@ describe('Verifier Test', () => {
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signature); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signature); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signature); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signature); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressTestnetWrong, messageHelloWorld, signature); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
+        expect(resultCorrectTestnet).to.be.true;
         expect(resultWrongMessage).to.be.false;
+        expect(resultWrongMessageTestnet).to.be.false;
         expect(resultWrongAddress).to.be.false;
+        expect(resultWrongAddressTestnet).to.be.false;
     });
 
     it('Can verify and falsify BIP-322 signature for P2WPKH address', () => {
         // Arrange
         // Test vectors listed at https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki#user-content-Test_vectors
         const address = "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l";
+        const addressTestnet = 'tb1q9vza2e8x573nczrlzms0wvx3gsqjx7vaxwd45v';
         const addressWrong = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
+        const addressWrongTestnet = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
         const messageEmpty = "";
         const messageHelloWorld = "Hello World";
         const signatureEmpty = "AkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=";
@@ -86,50 +104,74 @@ describe('Verifier Test', () => {
         // Act
         // Correct addresses and correct signature
         const resultEmptyValid = Verifier.verifySignature(address, messageEmpty, signatureEmpty);
+        const resultEmptyValidTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureEmpty);
         const resultHelloWorldValid = Verifier.verifySignature(address, messageHelloWorld, signatureHelloWorld);
+        const resultHelloWorldValidTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorld);
         const resultHelloWorldValidII =  Verifier.verifySignature(address, messageHelloWorld, signatureHelloWorldAlt);
+        const resultHelloWorldValidIITestnet =  Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorldAlt);
         // Correct addresses but incorrect signature
         const resultHelloWorldInvalidSig = Verifier.verifySignature(address, messageEmpty, signatureHelloWorld); // Mixed up the signature and message - should be false
+        const resultHelloWorldInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureHelloWorld); // Mixed up the signature and message - should be false
         const resultEmptyInvalidSig = Verifier.verifySignature(address, messageHelloWorld, signatureEmpty); // Mixed up the signature and message - should be false
+        const resultEmptyInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureEmpty); // Mixed up the signature and message - should be false
         // Incorrect addresses
         const resultEmptyInvalidAddress = Verifier.verifySignature(addressWrong, messageEmpty, signatureEmpty); // Wrong address - should be false
+        const resultEmptyInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageEmpty, signatureEmpty); // Wrong address - should be false
         const resultHelloWorldInvalidAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
+        const resultHelloWorldInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
         
         // Assert
         expect(resultEmptyValid).to.be.true;
+        expect(resultEmptyValidTestnet).to.be.true;
         expect(resultHelloWorldValid).to.be.true;
+        expect(resultHelloWorldValidTestnet).to.be.true;
         expect(resultHelloWorldValidII).to.be.true;
+        expect(resultHelloWorldValidIITestnet).to.be.true;
         expect(resultHelloWorldInvalidSig).to.be.false;
+        expect(resultHelloWorldInvalidSigTestnet).to.be.false;
         expect(resultEmptyInvalidSig).to.be.false; 
+        expect(resultEmptyInvalidSigTestnet).to.be.false; 
         expect(resultEmptyInvalidAddress).to.be.false;
+        expect(resultEmptyInvalidAddressTestnet).to.be.false;
         expect(resultHelloWorldInvalidAddress).to.be.false;
+        expect(resultHelloWorldInvalidAddressTestnet).to.be.false;
     });
 
     it('Can verify and falsify BIP-322 signature for single-key-spend P2TR address using SIGHASH_ALL flag', () => {
         // Arrange
         // Test vector listed at https://github.com/bitcoin/bitcoin/blob/29b28d07fa958b89e1c7916fda5d8654474cf495/src/test/util_tests.cpp#L2747
         const address = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
+        const addressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
         const addressWrong = "bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297";
+        const addressWrongTestnet = 'tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp';
         const messageWrong = "";
         const messageHelloWorld = "Hello World";
         const signatureHelloWorld = "AUHd69PrJQEv+oKTfZ8l+WROBHuy9HKrbFCJu7U1iK2iiEy1vMU5EfMtjc+VSHM7aU0SDbak5IUZRVno2P5mjSafAQ==";
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signatureHelloWorld); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorld); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signatureHelloWorld); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signatureHelloWorld); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
+        expect(resultCorrectTestnet).to.be.true;
         expect(resultWrongMessage).to.be.false;
+        expect(resultWrongMessageTestnet).to.be.false;
         expect(resultWrongAddress).to.be.false;
+        expect(resultWrongAddressTestnet).to.be.false;
     });
 
     it('Can verify and falsify BIP-322 signature for single-key-spend P2TR address using SIGHASH_DEFAULT flag', () => {
         // Arrange
         const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k'; // Private key of bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3
         const address = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
+        const addressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
         const addressWrong = "bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297";
+        const addressWrongTestnet = 'tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp';
         const messageWrong = "";
         const messageHelloWorld = "Hello World";
         // Initialize private key used to sign the transaction
@@ -157,13 +199,19 @@ describe('Verifier Test', () => {
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signature); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signature); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signature); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signature); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageHelloWorld, signature); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
+        expect(resultCorrectTestnet).to.be.true;
         expect(resultWrongMessage).to.be.false;
+        expect(resultWrongMessageTestnet).to.be.false;
         expect(resultWrongAddress).to.be.false;
+        expect(resultWrongAddressTestnet).to.be.false;
     });
 
     it('Refuse to verify P2WSH transaction', () => {
