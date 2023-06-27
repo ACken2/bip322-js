@@ -6,6 +6,7 @@
         "target": "es6",
         "sourceMap": true,
         "outDir": "dist",
+        "declaration": true,
         "baseUrl": ".",
         "paths": {
             "*": [
@@ -16,6 +17,7 @@
     },
     "exclude": [
         "node_modules",
-        "**/*.test.ts"
+        "**/*.test.ts",
+        "dist"
     ]
 }

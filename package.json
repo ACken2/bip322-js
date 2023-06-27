@@ -1,10 +1,12 @@
 {
     "name": "bip322",
-    "version": "0.0.1",
-    "description": "A BIP-322 utilities library",
-    "main": "index.js",
+    "version": "1.0.0",
+    "description": "A library that provides utility functions related to BIP-322 signature scheme",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
         "build": "tsc",
+        "prepack": "npm run build",
         "test": "ts-mocha 'test/**/*.test.ts'",
         "test:coverage": "nyc --reporter=html --reporter=text --reporter=text-summary npm test"
     },
