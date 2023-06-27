@@ -1,7 +1,5 @@
-node_modules
-.github
-.nyc_output
-coverage
-src
-test
-docs
+# Ignore everything...
+/*
+
+# Except what needs to be published
+!/dist
