@@ -1,10 +1,17 @@
 # BIP322
 
-A library that provides utility functions related to BIP-322 signature scheme.
+![Unit Test Status](https://github.com/ACken2/bip322/actions/workflows/unit_test.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/ACken2/bip322/badge.svg?branch=main)](https://coveralls.io/github/ACken2/bip322?branch=main)
+
+A Javascript library that provides utility functions related to the BIP-322 signature scheme.
 
 ## Limitations
 
 Only P2PKH, P2SH-P2WPKH, P2WPKH, and single-key-spend P2TR are supported in this library.
+
+## Documentation
+
+Available at https://acken2.github.io/bip322/
 
 ## Supported Features
 
