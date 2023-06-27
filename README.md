@@ -1,4 +1,4 @@
-# BIP322
+# BIP322-JS
 
 ![Unit Test Status](https://github.com/ACken2/bip322/actions/workflows/unit_test.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/ACken2/bip322/badge.svg?branch=main)](https://coveralls.io/github/ACken2/bip322?branch=main)
@@ -11,7 +11,7 @@ Only P2PKH, P2SH-P2WPKH, P2WPKH, and single-key-spend P2TR are supported in this
 
 ## Documentation
 
-Available at https://acken2.github.io/bip322/
+Available at https://acken2.github.io/bip322-js/
 
 ## Supported Features
 
