@@ -1,7 +1,7 @@
 # BIP322-JS
 
-![Unit Test Status](https://github.com/ACken2/bip322/actions/workflows/unit_test.yml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/ACken2/bip322/badge.svg?branch=main)](https://coveralls.io/github/ACken2/bip322?branch=main)
+![Unit Test Status](https://github.com/ACken2/bip322-js/actions/workflows/unit_test.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/ACken2/bip322-js/badge.svg?branch=main)](https://coveralls.io/github/ACken2/bip322-js?branch=main)
 
 A Javascript library that provides utility functions related to the BIP-322 signature scheme.
 
