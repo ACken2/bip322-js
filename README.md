@@ -23,7 +23,7 @@ Available at https://acken2.github.io/bip322-js/
 
 ```js
 // Import modules that are useful to you
-const { BIP322, Signer, Verifier } = require('bip322');
+const { BIP322, Signer, Verifier } = require('bip322-js');
 
 // Signing a BIP-322 signature with a private key
 const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
