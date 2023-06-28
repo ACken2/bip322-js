@@ -1,6 +1,6 @@
 {
     "name": "bip322-js",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "A Javascript library that provides utility functions related to the BIP-322 signature scheme",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
