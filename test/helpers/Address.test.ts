@@ -5,7 +5,7 @@ import ECPairFactory from 'ecpair';
 import ecc from '@bitcoinerlab/secp256k1';
 
 // Import module to be tested
-import { Address } from '../../src/helpers';
+import { Address } from '../../src';
 
 describe('Address Test', () => {
 

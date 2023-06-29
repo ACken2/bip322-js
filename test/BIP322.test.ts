@@ -5,7 +5,7 @@ import ecc from '@bitcoinerlab/secp256k1';
 import { expect } from 'chai';
 
 // Import module to be tested
-import BIP322 from "../src/BIP322";
+import { BIP322 } from "../src";
 
 // Tests
 describe('BIP322 Test', () => {

@@ -7,7 +7,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 
 // Import module to be tested
-import Verifier from '../src/Verifier';
+import { Verifier } from '../src';
 
 // Tests
 describe('Verifier Test', () => {

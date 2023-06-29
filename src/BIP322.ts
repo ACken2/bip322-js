@@ -1,7 +1,6 @@
 // Import dependencies
 import { Hash } from "fast-sha256";
 import * as bitcoin from 'bitcoinjs-lib';
-import ecc from '@bitcoinerlab/secp256k1';
 
 /**
  * Class that handles BIP-322 related operations.
@@ -39,8 +38,6 @@ class BIP322 {
      * @returns Bitcoin transaction that correspond to the to_spend transaction
      */
     public static buildToSpendTx(message: string, scriptPublicKey: Buffer) {
-        // Initialize Bitcoin lib
-        bitcoin.initEccLib(ecc);
         // Create PSBT object for constructing the transaction
         const psbt = new bitcoin.Psbt();
         // Set default value for nVersion and nLockTime
@@ -79,8 +76,6 @@ class BIP322 {
      * @returns Ready-to-be-signed bitcoinjs.Psbt transaction
      */
     public static buildToSignTx(toSpendTxId: string, witnessScript: Buffer, isRedeemScript: boolean = false, tapInternalKey: Buffer = undefined) {
-        // Initialize Bitcoin lib
-        bitcoin.initEccLib(ecc);
         // Create PSBT object for constructing the transaction
         const psbt = new bitcoin.Psbt();
         // Set default value for nVersion and nLockTime

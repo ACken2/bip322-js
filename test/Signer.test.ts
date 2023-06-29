@@ -4,7 +4,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import * as bitcoinMessage from 'bitcoinjs-message';
 
 // Import module to be tested
-import Signer from '../src/Signer';
+import { Signer } from '../src';
 
 describe('Signer Test', () => {
 

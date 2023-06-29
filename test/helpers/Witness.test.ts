@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import chaibytes from "chai-bytes";
 
 // Import module to be tested
-import { Witness } from '../../src/helpers';
+import { Witness } from '../../src';
 
 describe('Witness Test', () => {
 
