@@ -26,7 +26,7 @@ class BIP137 {
     /**
      * Derive the public key that signed a valid BIP-137 signature.
      * @param message Message signed by the signature
-     * @param signature Signature to be decoded
+     * @param signature Base-64 encoded signature to be decoded
      * @returns Public key that signs the provided signature
      */
     public static derivePubKey(message: string, signature: string) {
@@ -35,7 +35,7 @@ class BIP137 {
         // Decode the provided BIP-137 signature
         const signatureDecoded = this.decodeSignature(Buffer.from(signature, 'base64'));
         // Recover the public key
-        return ecc.ecdsaRecover(signatureDecoded.signature, signatureDecoded.recovery, messageHash, signatureDecoded.compressed);
+        return Buffer.from(ecc.ecdsaRecover(signatureDecoded.signature, signatureDecoded.recovery, messageHash, signatureDecoded.compressed));
     }
 
     /**
