@@ -40,6 +40,77 @@ describe('Verifier Test', () => {
         expect(resultWrongAddressTestnet).to.be.false;
     });
 
+    it('Can verify legacy BIP-137 signature from P2SH-P2WPKH, P2WPKH, and P2TR address', () => {
+        // Arrange
+        const message = 'Hello World';
+        const signature = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo='; // Signed by public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        const p2pkhMainnetValid = "1QDZfWJTVXqHFmJFRkyrnidvHyPyG5bynY";
+        const p2pkhTestnetValid = "n4jWxZPSJZGY2sms9KxEcdrF9xzgEbrHHj";
+        const p2shMainnetValid = "36mTiayp1ZCcMr8t8KDdnVGSiz7Pd1cNie";
+        const p2shTestnetValid = "2MxKfnKuqd1hxZdmRoSqWQSFhwLKZRQ3NpZ";
+        const p2wpkhMainnetValid = "bc1ql64jd2pewssuuehu6g7kh6ud54amq5n8t95eeq";
+        const p2wpkhTestnetValid = "tb1ql64jd2pewssuuehu6g7kh6ud54amq5n8pr02zn";
+        const p2trMainnetValid = "bc1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9s34fgdd";
+        const p2trTestnetValid = "tb1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9sxal8hz";
+        // Random address that should fail validation
+        const p2pkhMainnetInvalid = "1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV";
+        const p2pkhTestnetInvalid = "muZpTpBYhxmRFuCjLc7C6BBDF32C8XVJUi";
+        const p2shMainnetInvalid = "3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f";
+        const p2shTestnetInvalid = "2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc";
+        const p2wpkhMainnetInvalid = "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l";
+        const p2wpkhTestnetInvalid = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
+        const p2trMainnetInvalid = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
+        const p2trTestnetInvalid = "tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
+        // Invalid address
+        const invalidAddress = "bc1apv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
+        const invalidAddressTestnet = "tb1a000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
+
+        // Act
+        const p2pkhMainnetValidResult = Verifier.verifySignature(p2pkhMainnetValid, message, signature);
+        const p2pkhTestnetValidResult = Verifier.verifySignature(p2pkhTestnetValid, message, signature);
+        const p2shMainnetValidResult = Verifier.verifySignature(p2shMainnetValid, message, signature);
+        const p2shTestnetValidResult = Verifier.verifySignature(p2shTestnetValid, message, signature);
+        const p2wpkhMainnetValidResult = Verifier.verifySignature(p2wpkhMainnetValid, message, signature);
+        const p2wpkhTestnetValidResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature);
+        const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
+        const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature);
+
+        const p2pkhMainnetInvalidResult = Verifier.verifySignature(p2pkhMainnetInvalid, message, signature);
+        const p2pkhTestnetInvalidResult = Verifier.verifySignature(p2pkhTestnetInvalid, message, signature);
+        const p2shMainnetInvalidResult = Verifier.verifySignature(p2shMainnetInvalid, message, signature);
+        const p2shTestnetInvalidResult = Verifier.verifySignature(p2shTestnetInvalid, message, signature);
+        const p2wpkhMainnetInvalidResult = Verifier.verifySignature(p2wpkhMainnetInvalid, message, signature);
+        const p2wpkhTestnetInvalidResult = Verifier.verifySignature(p2wpkhTestnetInvalid, message, signature);
+        const p2trMainnetInvalidResult = Verifier.verifySignature(p2trMainnetInvalid, message, signature);
+        const p2trTestnetInvalidResult = Verifier.verifySignature(p2trTestnetInvalid, message, signature);
+
+        const invalidAddressResult = Verifier.verifySignature(invalidAddress, message, signature);
+        const invalidAddressTestnetResult = Verifier.verifySignature(invalidAddressTestnet, message, signature);
+
+        // Assert
+        expect(p2pkhMainnetValidResult).to.be.true;
+        expect(p2pkhTestnetValidResult).to.be.true;
+        expect(p2shMainnetValidResult).to.be.true;
+        expect(p2shTestnetValidResult).to.be.true;
+        expect(p2wpkhMainnetValidResult).to.be.true;
+        expect(p2wpkhTestnetValidResult).to.be.true;
+        expect(p2trMainnetValidResult).to.be.true;
+        expect(p2trTestnetValidResult).to.be.true;
+
+        expect(p2pkhMainnetInvalidResult).to.be.false;
+        expect(p2pkhTestnetInvalidResult).to.be.false;
+        expect(p2shMainnetInvalidResult).to.be.false;
+        expect(p2shTestnetInvalidResult).to.be.false;
+        expect(p2wpkhMainnetInvalidResult).to.be.false;
+        expect(p2wpkhTestnetInvalidResult).to.be.false;
+        expect(p2trMainnetInvalidResult).to.be.false;
+        expect(p2trTestnetInvalidResult).to.be.false;
+
+        expect(invalidAddressResult).to.be.false;
+        expect(invalidAddressTestnetResult).to.be.false;
+    });
+
     it('Can verify and falsify BIP-322 signature for P2SH-P2WPKH address', () => {
         // Arrange
         // Constants
