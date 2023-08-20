@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import chaibytes from "chai-bytes";
 
 // Import module to be tested
-import { BIP137 } from '../../src/helpers';
+import { BIP137 } from '../../src';
 
 describe('BIP137 Test', () => {
 
