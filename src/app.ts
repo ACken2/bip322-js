@@ -18,7 +18,7 @@ app.post('/sign', (req: Request, res: Response) => {
     }
 });
 
-// API 端点用于验证签名
+// API endpoint for verifySignature
 app.post('/verifySignature', (req: Request, res: Response) => {
     try {
         const { signerAddress, message, signatureBase64 } = req.body;

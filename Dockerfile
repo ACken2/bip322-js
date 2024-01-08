@@ -1,23 +1,23 @@
-# 使用官方的Node.js运行时作为父镜像
+# Using the official Node.js runtime as the parent image.
 FROM node:14
 
-# 在容器中设置工作目录
+# Setting the working directory in the container.
 WORKDIR /usr/src/app
 
-# 将 package.json 和 package-lock.json 复制到容器
+# Copying package.json and package-lock.json into the container.
 COPY package*.json ./
 
-# 安装应用程序的依赖项
+# Installing dependencies for the application.
 RUN npm install
 
-# 复制应用程序源代码
+# Copying the source code of the application.
 COPY . .
 
-# 构建 TypeScript 项目
+# Building TypeScript project.
 RUN npm run build
 
-# 暴露应用程序运行的端口
+# Expose the port on which the application runs.
 EXPOSE 3000
 
-# 定义运行应用程序的命令
+# Define the command to run the application.
 CMD [ "node", "dist/app.js" ]

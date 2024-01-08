@@ -45,3 +45,27 @@ const toSign = BIP322.buildToSignTx(toSpendTxId, scriptPubKey); // bitcoin.Psbt
 ```
 
 More working examples can be found within the unit test for BIP322, Signer, and Verifier.
+
+## Getting Started
+### Build Docker Image
+```
+docker build -t bip322-js .
+```
+### Run Docker Container
+```
+docker run -p 3000:3000 -d bip322-js
+```
+### sign  
+Please make sure to replace the respective parameters with your own parameters.  
+```
+curl -X POST -H "Content-Type: application/json" -d '{"privateKey": "L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k", "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l", "message": "Hello World"}' http://localhost:3000/sign
+```
+### verify
+Please make sure to replace the respective parameters with your own parameters.  
+```
+curl -X POST -H "Content-Type: application/json" -d '{
+  "signerAddress": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+  "message": "Hello World",
+  "signatureBase64": "AkgwRQIhAOzyynlqt93lOKJr+wmmxIens//zPzl9tqIOua93wO6MAiBi5n5EyAcPScOjf1lAqIUIQtr3zKNeavYabHyR8eGhowEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy"
+}' http://localhost:3000/verifySignature
+```
