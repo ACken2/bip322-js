@@ -69,3 +69,11 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "signatureBase64": "AkgwRQIhAOzyynlqt93lOKJr+wmmxIens//zPzl9tqIOua93wO6MAiBi5n5EyAcPScOjf1lAqIUIQtr3zKNeavYabHyR8eGhowEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy"
 }' http://localhost:3000/verifySignature
 ```
+
+### hash
+Please make sure to replace the respective parameters with your own parameters.  
+```
+curl -X POST -H "Content-Type: application/json" -d '{
+  "message": "Hello World"
+}' http://localhost:3000/hashMessage
+```
