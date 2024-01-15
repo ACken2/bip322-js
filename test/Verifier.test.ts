@@ -184,11 +184,11 @@ describe('Verifier Test', () => {
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, messageHelloWorld, signature); // Everything correct
-        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signature); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signature, bitcoin.networks.testnet); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signature); // Wrong message - should be false
-        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature, bitcoin.networks.testnet); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signature); // Wrong address - should be false
-        const resultWrongAddressTestnet = Verifier.verifySignature(addressTestnetWrong, messageHelloWorld, signature); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressTestnetWrong, messageHelloWorld, signature, bitcoin.networks.testnet); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
@@ -216,21 +216,21 @@ describe('Verifier Test', () => {
         // Act
         // Correct addresses and correct signature
         const resultEmptyValid = Verifier.verifySignature(address, messageEmpty, signatureEmpty);
-        const resultEmptyValidTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureEmpty);
+        const resultEmptyValidTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureEmpty, bitcoin.networks.testnet);
         const resultHelloWorldValid = Verifier.verifySignature(address, messageHelloWorld, signatureHelloWorld);
-        const resultHelloWorldValidTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorld);
+        const resultHelloWorldValidTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorld, bitcoin.networks.testnet);
         const resultHelloWorldValidII =  Verifier.verifySignature(address, messageHelloWorld, signatureHelloWorldAlt);
-        const resultHelloWorldValidIITestnet =  Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorldAlt);
+        const resultHelloWorldValidIITestnet =  Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureHelloWorldAlt, bitcoin.networks.testnet);
         // Correct addresses but incorrect signature
         const resultHelloWorldInvalidSig = Verifier.verifySignature(address, messageEmpty, signatureHelloWorld); // Mixed up the signature and message - should be false
-        const resultHelloWorldInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureHelloWorld); // Mixed up the signature and message - should be false
+        const resultHelloWorldInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageEmpty, signatureHelloWorld, bitcoin.networks.testnet); // Mixed up the signature and message - should be false
         const resultEmptyInvalidSig = Verifier.verifySignature(address, messageHelloWorld, signatureEmpty); // Mixed up the signature and message - should be false
-        const resultEmptyInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureEmpty); // Mixed up the signature and message - should be false
+        const resultEmptyInvalidSigTestnet = Verifier.verifySignature(addressTestnet, messageHelloWorld, signatureEmpty, bitcoin.networks.testnet); // Mixed up the signature and message - should be false
         // Incorrect addresses
         const resultEmptyInvalidAddress = Verifier.verifySignature(addressWrong, messageEmpty, signatureEmpty); // Wrong address - should be false
-        const resultEmptyInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageEmpty, signatureEmpty); // Wrong address - should be false
+        const resultEmptyInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageEmpty, signatureEmpty, bitcoin.networks.testnet); // Wrong address - should be false
         const resultHelloWorldInvalidAddress = Verifier.verifySignature(addressWrong, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
-        const resultHelloWorldInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageHelloWorld, signatureHelloWorld); // Wrong address - should be false
+        const resultHelloWorldInvalidAddressTestnet = Verifier.verifySignature(addressWrongTestnet, messageHelloWorld, signatureHelloWorld, bitcoin.networks.testnet); // Wrong address - should be false
         
         // Assert
         expect(resultEmptyValid).to.be.true;
