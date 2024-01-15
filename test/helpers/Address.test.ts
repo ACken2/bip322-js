@@ -5,6 +5,7 @@ import chaibytes from "chai-bytes";
 import ECPairFactory from 'ecpair';
 
 // Import module to be tested
+import { networks } from 'bitcoinjs-lib';
 import { Address } from '../../src';
 
 describe('Address Test', () => {
@@ -322,16 +323,16 @@ describe('Address Test', () => {
             const p2trAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
             const p2trAddressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
 
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2pkh').mainnet).to.equal(p2pkhAddress);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2pkh').testnet).to.equal(p2pkhAddressTestnet);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh').mainnet).to.equal(p2shAddress);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh').testnet).to.equal(p2shAddressTestnet);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh').mainnet).to.equal(p2wpkhAddress);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh').testnet).to.equal(p2wpkhAddressTestnet);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2tr').mainnet).to.equal(p2trAddress);
-            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2tr').testnet).to.equal(p2trAddressTestnet);
-            expect(Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr').mainnet).to.equal(p2trAddress);
-            expect(Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr').testnet).to.equal(p2trAddressTestnet);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2pkh')).to.equal(p2pkhAddress);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2pkh', networks.testnet)).to.equal(p2pkhAddressTestnet);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh')).to.equal(p2shAddress);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh', networks.testnet)).to.equal(p2shAddressTestnet);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh')).to.equal(p2wpkhAddress);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh', networks.testnet)).to.equal(p2wpkhAddressTestnet);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2tr')).to.equal(p2trAddress);
+            expect(Address.convertPubKeyIntoAddress(publicKey, 'p2tr', networks.testnet)).to.equal(p2trAddressTestnet);
+            expect(Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr')).to.equal(p2trAddress);
+            expect(Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr', networks.testnet)).to.equal(p2trAddressTestnet);
         });
 
         it('Throw when handling invalid address type', () => {
