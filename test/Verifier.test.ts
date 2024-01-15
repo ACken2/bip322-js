@@ -1,16 +1,18 @@
 // Import dependencies
-import { expect } from 'chai';
-import BIP322 from "../src/BIP322";
-import ECPairFactory from 'ecpair';
-import { Witness } from '../src/helpers';
-import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
+import * as bitcoin from 'bitcoinjs-lib';
+import { expect } from 'chai';
+import ECPairFactory from 'ecpair';
+import BIP322 from "../src/BIP322";
+import { Witness } from '../src/helpers';
 
 // Import module to be tested
 import { Verifier } from '../src';
 
 // Tests
 describe('Verifier Test', () => {
+    const message = 'Hello World';
+    const signature = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo='; // Signed by public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
 
     it('Can verify legacy P2PKH signature', () => {
         // Arrange
@@ -25,11 +27,11 @@ describe('Verifier Test', () => {
 
         // Act
         const resultCorrect = Verifier.verifySignature(address, message, signature); // Everything correct
-        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, message, signature); // Everything correct
+        const resultCorrectTestnet = Verifier.verifySignature(addressTestnet, message, signature, bitcoin.networks.testnet); // Everything correct
         const resultWrongMessage = Verifier.verifySignature(address, messageWrong, signature); // Wrong message - should be false
-        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature); // Wrong message - should be false
+        const resultWrongMessageTestnet = Verifier.verifySignature(addressTestnet, messageWrong, signature, bitcoin.networks.testnet); // Wrong message - should be false
         const resultWrongAddress = Verifier.verifySignature(addressWrong, message, signature); // Wrong address - should be false
-        const resultWrongAddressTestnet = Verifier.verifySignature(addressWrongTestnet, message, signature); // Wrong address - should be false
+        const resultWrongAddressTestnet = Verifier.verifySignature(addressWrongTestnet, message, signature, bitcoin.networks.testnet); // Wrong address - should be false
 
         // Assert
         expect(resultCorrect).to.be.true;
@@ -40,75 +42,114 @@ describe('Verifier Test', () => {
         expect(resultWrongAddressTestnet).to.be.false;
     });
 
-    it('Can verify legacy BIP-137 signature from P2SH-P2WPKH, P2WPKH, and P2TR address', () => {
-        // Arrange
-        const message = 'Hello World';
-        const signature = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo='; // Signed by public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+    it('Can verify legacy BIP-137 signature from P2SH', () => {
+        // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        const p2shMainnetValid = "36mTiayp1ZCcMr8t8KDdnVGSiz7Pd1cNie";
+        const p2shTestnetValid = "2MxKfnKuqd1hxZdmRoSqWQSFhwLKZRQ3NpZ";
+        // Random address that should fail validation
+        const p2shMainnetInvalid = "3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f";
+        const p2shTestnetInvalid = "2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc";
+
+        // Act
+        const p2shMainnetValidResult = Verifier.verifySignature(p2shMainnetValid, message, signature);
+        const p2shTestnetValidResult = Verifier.verifySignature(p2shTestnetValid, message, signature, bitcoin.networks.testnet);
+
+        const p2shMainnetInvalidResult = Verifier.verifySignature(p2shMainnetInvalid, message, signature);
+        const p2shTestnetInvalidResult = Verifier.verifySignature(p2shTestnetInvalid, message, signature, bitcoin.networks.testnet);
+        const p2shNetworkMismatchResult = Verifier.verifySignature(p2shTestnetValid, message, signature);
+
+        // Assert
+        expect(p2shMainnetValidResult).to.be.true;
+        expect(p2shTestnetValidResult).to.be.true;
+
+        expect(p2shMainnetInvalidResult).to.be.false;
+        expect(p2shTestnetInvalidResult).to.be.false;
+        expect(p2shNetworkMismatchResult).to.be.false;
+    });
+    it('Can verify legacy BIP-137 signature from P2PKH', () => {
         // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
         const p2pkhMainnetValid = "1QDZfWJTVXqHFmJFRkyrnidvHyPyG5bynY";
         const p2pkhTestnetValid = "n4jWxZPSJZGY2sms9KxEcdrF9xzgEbrHHj";
-        const p2shMainnetValid = "36mTiayp1ZCcMr8t8KDdnVGSiz7Pd1cNie";
-        const p2shTestnetValid = "2MxKfnKuqd1hxZdmRoSqWQSFhwLKZRQ3NpZ";
-        const p2wpkhMainnetValid = "bc1ql64jd2pewssuuehu6g7kh6ud54amq5n8t95eeq";
-        const p2wpkhTestnetValid = "tb1ql64jd2pewssuuehu6g7kh6ud54amq5n8pr02zn";
-        const p2trMainnetValid = "bc1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9s34fgdd";
-        const p2trTestnetValid = "tb1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9sxal8hz";
         // Random address that should fail validation
         const p2pkhMainnetInvalid = "1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV";
         const p2pkhTestnetInvalid = "muZpTpBYhxmRFuCjLc7C6BBDF32C8XVJUi";
-        const p2shMainnetInvalid = "3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f";
-        const p2shTestnetInvalid = "2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc";
+
+        // Act
+        const p2pkhMainnetValidResult = Verifier.verifySignature(p2pkhMainnetValid, message, signature);
+        const p2pkhTestnetValidResult = Verifier.verifySignature(p2pkhTestnetValid, message, signature, bitcoin.networks.testnet);
+
+        const p2pkhMainnetInvalidResult = Verifier.verifySignature(p2pkhMainnetInvalid, message, signature);
+        const p2pkhTestnetInvalidResult = Verifier.verifySignature(p2pkhTestnetInvalid, message, signature, bitcoin.networks.testnet);
+
+        // Assert
+        expect(p2pkhMainnetValidResult).to.be.true;
+        expect(p2pkhTestnetValidResult).to.be.true;
+
+        expect(p2pkhMainnetInvalidResult).to.be.false;
+        expect(p2pkhTestnetInvalidResult).to.be.false;
+    });
+    it('Can verify legacy BIP-137 signature from P2WPKH', () => {
+        // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        const p2wpkhMainnetValid = "bc1ql64jd2pewssuuehu6g7kh6ud54amq5n8t95eeq";
+        const p2wpkhTestnetValid = "tb1ql64jd2pewssuuehu6g7kh6ud54amq5n8pr02zn";
+        // Random address that should fail validation
         const p2wpkhMainnetInvalid = "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l";
         const p2wpkhTestnetInvalid = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
+
+        // Act
+        const p2wpkhMainnetValidResult = Verifier.verifySignature(p2wpkhMainnetValid, message, signature);
+        const p2wpkhTestnetValidResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature, bitcoin.networks.testnet);
+
+        const p2wpkhMainnetInvalidResult = Verifier.verifySignature(p2wpkhMainnetInvalid, message, signature);
+        const p2wpkhTestnetInvalidResult = Verifier.verifySignature(p2wpkhTestnetInvalid, message, signature, bitcoin.networks.testnet);
+        const p2wpkhNetworkMismatchResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature);
+
+        // Assert
+        expect(p2wpkhMainnetValidResult).to.be.true;
+        expect(p2wpkhTestnetValidResult).to.be.true;
+
+        expect(p2wpkhMainnetInvalidResult).to.be.false;
+        expect(p2wpkhTestnetInvalidResult).to.be.false;
+        expect(p2wpkhNetworkMismatchResult).to.be.false;
+    });
+    it('Can verify legacy BIP-137 signature from P2TR address', () => {
+        // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        const p2trMainnetValid = "bc1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9s34fgdd";
+        const p2trTestnetValid = "tb1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9sxal8hz";
+        // Random address that should fail validation
         const p2trMainnetInvalid = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
         const p2trTestnetInvalid = "tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
+
+        // Act
+        const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
+        const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature, bitcoin.networks.testnet);
+        
+        const p2trMainnetInvalidResult = Verifier.verifySignature(p2trMainnetInvalid, message, signature);
+        const p2trTestnetInvalidResult = Verifier.verifySignature(p2trTestnetInvalid, message, signature);
+        const p2trNetworkMismatchResult = Verifier.verifySignature(p2trTestnetValid, message, signature);
+
+        // Assert
+        expect(p2trMainnetValidResult).to.be.true;
+        expect(p2trTestnetValidResult).to.be.true;
+
+        expect(p2trMainnetInvalidResult).to.be.false;
+        expect(p2trTestnetInvalidResult).to.be.false;
+        expect(p2trNetworkMismatchResult).to.be.false;
+    });
+    it('Can invalidate addresses', () => {
         // Invalid address
         const invalidAddress = "bc1apv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
         const invalidAddressTestnet = "tb1a000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
 
         // Act
-        const p2pkhMainnetValidResult = Verifier.verifySignature(p2pkhMainnetValid, message, signature);
-        const p2pkhTestnetValidResult = Verifier.verifySignature(p2pkhTestnetValid, message, signature);
-        const p2shMainnetValidResult = Verifier.verifySignature(p2shMainnetValid, message, signature);
-        const p2shTestnetValidResult = Verifier.verifySignature(p2shTestnetValid, message, signature);
-        const p2wpkhMainnetValidResult = Verifier.verifySignature(p2wpkhMainnetValid, message, signature);
-        const p2wpkhTestnetValidResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature);
-        const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
-        const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature);
-
-        const p2pkhMainnetInvalidResult = Verifier.verifySignature(p2pkhMainnetInvalid, message, signature);
-        const p2pkhTestnetInvalidResult = Verifier.verifySignature(p2pkhTestnetInvalid, message, signature);
-        const p2shMainnetInvalidResult = Verifier.verifySignature(p2shMainnetInvalid, message, signature);
-        const p2shTestnetInvalidResult = Verifier.verifySignature(p2shTestnetInvalid, message, signature);
-        const p2wpkhMainnetInvalidResult = Verifier.verifySignature(p2wpkhMainnetInvalid, message, signature);
-        const p2wpkhTestnetInvalidResult = Verifier.verifySignature(p2wpkhTestnetInvalid, message, signature);
-        const p2trMainnetInvalidResult = Verifier.verifySignature(p2trMainnetInvalid, message, signature);
-        const p2trTestnetInvalidResult = Verifier.verifySignature(p2trTestnetInvalid, message, signature);
-
         const invalidAddressResult = Verifier.verifySignature(invalidAddress, message, signature);
-        const invalidAddressTestnetResult = Verifier.verifySignature(invalidAddressTestnet, message, signature);
+        const invalidAddressTestnetResult = Verifier.verifySignature(invalidAddressTestnet, message, signature, bitcoin.networks.testnet);
+        const invalidAddressNetworkMismatchResult = Verifier.verifySignature(invalidAddressTestnet, message, signature,bitcoin.networks.bitcoin);
 
         // Assert
-        expect(p2pkhMainnetValidResult).to.be.true;
-        expect(p2pkhTestnetValidResult).to.be.true;
-        expect(p2shMainnetValidResult).to.be.true;
-        expect(p2shTestnetValidResult).to.be.true;
-        expect(p2wpkhMainnetValidResult).to.be.true;
-        expect(p2wpkhTestnetValidResult).to.be.true;
-        expect(p2trMainnetValidResult).to.be.true;
-        expect(p2trTestnetValidResult).to.be.true;
-
-        expect(p2pkhMainnetInvalidResult).to.be.false;
-        expect(p2pkhTestnetInvalidResult).to.be.false;
-        expect(p2shMainnetInvalidResult).to.be.false;
-        expect(p2shTestnetInvalidResult).to.be.false;
-        expect(p2wpkhMainnetInvalidResult).to.be.false;
-        expect(p2wpkhTestnetInvalidResult).to.be.false;
-        expect(p2trMainnetInvalidResult).to.be.false;
-        expect(p2trTestnetInvalidResult).to.be.false;
-
         expect(invalidAddressResult).to.be.false;
         expect(invalidAddressTestnetResult).to.be.false;
+        expect(invalidAddressNetworkMismatchResult).to.be.false;
     });
 
     it('Can verify and falsify BIP-322 signature for P2SH-P2WPKH address', () => {
@@ -126,12 +167,12 @@ describe('Verifier Test', () => {
         const testPrivateKey = ECPair.fromWIF(privateKey);
         // Obtain the script public key
         const scriptPubKey = bitcoin.payments.p2sh({
-			address: address
-		}).output as Buffer;
+            address: address
+        }).output as Buffer;
         // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
         const redeemScript = bitcoin.payments.p2wpkh({
-			hash: bitcoin.crypto.hash160(testPrivateKey.publicKey)
-		}).output as Buffer;
+            hash: bitcoin.crypto.hash160(testPrivateKey.publicKey)
+        }).output as Buffer;
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft a toSign transaction that spends toSpend transaction
@@ -257,8 +298,8 @@ describe('Verifier Test', () => {
         );
         // Obtain the script public key
         const scriptPubKey = bitcoin.payments.p2tr({
-			address: address
-		}).output as Buffer;
+            address: address
+        }).output as Buffer;
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft a toSign transaction that spends toSpend transaction
@@ -374,8 +415,8 @@ describe('Verifier Test', () => {
         );
         // Obtain the script public key
         const scriptPubKey = bitcoin.payments.p2tr({
-			address: address
-		}).output as Buffer;
+            address: address
+        }).output as Buffer;
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft, sign the toSign transaction, and extract the signature using different SIGHASH
