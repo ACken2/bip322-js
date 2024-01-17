@@ -160,7 +160,7 @@ class Address {
             }
         }
         else if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
-            if (address.length === 62) {
+            if (address.length === 62 || address.length === 64) {
                 // P2TR address
                 return bitcoin.payments.p2tr({
                     address: address,
