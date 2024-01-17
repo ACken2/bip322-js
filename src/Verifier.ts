@@ -59,7 +59,6 @@ class Verifier {
                 const hashedLockingScriptInScriptPubKey = scriptPubKey.subarray(2, -1);
                 // Check if the P2SH locking script OP_HASH160 <HASH> OP_EQUAL is satisified
                 if (Buffer.compare(hashedLockingScript, hashedLockingScriptInScriptPubKey) !== 0) {
-                    console.log('this')
                     return false; // Reject signature if the hashed locking script is different from the hashed locking script in the scriptPubKey
                 }
             }
@@ -152,7 +151,6 @@ class Verifier {
                 const p2trAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2tr', network);
                 // Assert that the derived address is identical to the claimed signing address
                 if (p2trAddressDerived !== signerAddress) {
-                    console.log(p2trAddressDerived, signerAddress)
                     return false; // Derived address did not match with the claimed signing address
                 }
             }
