@@ -112,7 +112,7 @@ describe('Verifier Test', () => {
         expect(p2wpkhTestnetInvalidResult).to.be.false;
         expect(p2wpkhNetworkMismatchResult).to.be.false;
     });
-    it.only('Can verify legacy BIP-137 signature from P2TR address', () => {
+    it('Can verify legacy BIP-137 signature from P2TR address', () => {
         // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
         const p2trMainnetValid = "bc1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9s34fgdd";
         const p2trTestnetValid = "tb1p5tm5kzqpflhxkkzhl7x4f0nnfygp38hxz4erdq4ffhpqgmgket9sxal8hz";
