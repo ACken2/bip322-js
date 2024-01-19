@@ -5,7 +5,9 @@ import * as bitcoin from 'bitcoinjs-lib';
  * Class that implement address-related utility functions.
  */
 class Address {
-
+    static toXOnly (pubKey) {
+        return Buffer.from(pubKey.length === 32 ? pubKey : pubKey.subarray(1, 33))
+      }
     /**
      * Check if a given Bitcoin address is a pay-to-public-key-hash (p2pkh) address.
      * @param address Bitcoin address to be checked
@@ -191,7 +193,7 @@ class Address {
                 return bitcoin.payments.p2wpkh({ pubkey: publicKey, network }).address
             case 'p2tr':
                 // Convert full-length public key into internal public key if necessary
-                const internalPubkey = publicKey.byteLength === 33 ? publicKey.subarray(1, 33) : publicKey;
+                const internalPubkey = this.toXOnly(publicKey)
                 return bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network }).address
             default:
                 throw new Error('Cannot convert public key into unsupported address type.');
