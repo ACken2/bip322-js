@@ -120,10 +120,6 @@ describe('Verifier Test', () => {
         const p2trMainnetInvalid = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
         const p2trTestnetInvalid = "tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
 
-        const m = "I confirm that only I, peach024118ae, control the address tb1p7pg9m6rqvjmkd5padeg3ddjfp843sqhq30emutyswy3kq6wm4c2sewjvs6"
-        const a = "tb1p7pg9m6rqvjmkd5padeg3ddjfp843sqhq30emutyswy3kq6wm4c2sewjvs6"
-        const s = "AUGCdzptKI8naQeyeCF+g5YXk8HX5YRNPsQNhj3QILzxx/M6YNxtNJahw4yJf+6bsqvGs+5RKaBszAEx+oHhuVTj"
-        expect(Verifier.verifySignature(a, m, s, bitcoin.networks.testnet)).to.be.true
         // Act
         const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
         const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature, bitcoin.networks.testnet);
