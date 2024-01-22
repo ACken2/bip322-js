@@ -20,7 +20,8 @@ class Verifier {
      * @returns True if the provided signature is a valid BIP-322 signature for the given message and address, false if otherwise
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
-    public static verifySignature(signerAddress: string, message: string, signatureBase64: string, network: bitcoin.Network = bitcoin.networks.bitcoin) {
+    public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
+        const network = Address.getNetworkFromAddess(signerAddress)
         // Handle legacy BIP-137 signature
         // For P2PKH address, assume the signature is also a legacy signature
         if (Address.isP2PKH(signerAddress) || BIP137.isBIP137Signature(signatureBase64)) {
