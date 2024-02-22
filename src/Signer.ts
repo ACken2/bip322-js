@@ -46,7 +46,7 @@ class Signer {
             const redeemScript = bitcoin.payments.p2wpkh({
                 hash: bitcoin.crypto.hash160(signer.publicKey),
                 network: network
-            }).output as Buffer;
+            }).output;
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
         else if (Address.isP2WPKH(address)) {
@@ -56,11 +56,11 @@ class Signer {
         else {
             // P2TR signing path
             // Extract the taproot internal public key
-            const internalPublicKey = signer.publicKey.subarray(1, 33);
+            const internalPublicKey = Address.toXOnly(signer.publicKey);
             // Tweak the private key for signing, since the output and address uses tweaked key
             // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
             signer = signer.tweak(
-                bitcoin.crypto.taggedHash('TapTweak', signer.publicKey.subarray(1, 33))
+                bitcoin.crypto.taggedHash('TapTweak', Address.toXOnly(signer.publicKey))
             );
             // Draft a toSign transaction that spends toSpend transaction
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey);

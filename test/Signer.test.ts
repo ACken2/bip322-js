@@ -1,13 +1,12 @@
 // Import dependencies
-import { expect } from 'chai';
 import * as bitcoin from 'bitcoinjs-lib';
 import * as bitcoinMessage from 'bitcoinjs-message';
+import { expect } from 'chai';
 
 // Import module to be tested
 import { Signer } from '../src';
 
 describe('Signer Test', () => {
-
     it('Can sign legacy P2PKH signature', () => {
         // Arrange
         const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
