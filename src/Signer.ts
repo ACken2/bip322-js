@@ -1,10 +1,10 @@
 // Import dependencies
-import BIP322 from "./BIP322";
-import ECPairFactory from 'ecpair';
-import { Address } from "./helpers";
-import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
+import * as bitcoin from 'bitcoinjs-lib';
 import * as bitcoinMessage from 'bitcoinjs-message';
+import ECPairFactory from 'ecpair';
+import BIP322 from "./BIP322";
+import { Address } from "./helpers";
 
 /**
  * Class that signs BIP-322 signature using a private key.
@@ -25,7 +25,7 @@ class Signer {
         const ECPair = ECPairFactory(ecc);
         let signer = ECPair.fromWIF(privateKey, network);
         // Check if the private key can sign message for the given address
-        if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address)) {
+        if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address, network)) {
             throw new Error(`Invalid private key provided for signing message for ${address}.`);
         }
         // Handle legacy P2PKH signature
@@ -46,7 +46,7 @@ class Signer {
             const redeemScript = bitcoin.payments.p2wpkh({
                 hash: bitcoin.crypto.hash160(signer.publicKey),
                 network: network
-            }).output as Buffer;
+            }).output;
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
         else if (Address.isP2WPKH(address)) {
@@ -56,11 +56,11 @@ class Signer {
         else {
             // P2TR signing path
             // Extract the taproot internal public key
-            const internalPublicKey = signer.publicKey.subarray(1, 33);
+            const internalPublicKey = Address.toXOnly(signer.publicKey);
             // Tweak the private key for signing, since the output and address uses tweaked key
             // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
             signer = signer.tweak(
-                bitcoin.crypto.taggedHash('TapTweak', signer.publicKey.subarray(1, 33))
+                bitcoin.crypto.taggedHash('TapTweak', Address.toXOnly(signer.publicKey))
             );
             // Draft a toSign transaction that spends toSpend transaction
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey);
@@ -81,26 +81,26 @@ class Signer {
      * @param claimedAddress Address claimed to be derived based on the provided public key
      * @returns True if the claimedAddress can be derived by the provided publicKey, false if otherwise
      */
-    private static checkPubKeyCorrespondToAddress(publicKey: Buffer, claimedAddress: string) {
+    private static checkPubKeyCorrespondToAddress(publicKey: Buffer, claimedAddress: string, network: bitcoin.Network = bitcoin.networks.bitcoin) {
         // Derive the same address type from the provided public key
-        let derivedAddresses: { mainnet: string, testnet: string };
+        let derivedAddresses
         if (Address.isP2PKH(claimedAddress)) {
-            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
+            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh', network);
         }
         else if (Address.isP2SH(claimedAddress)) {
-            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh');
+            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh', network);
         }
         else if (Address.isP2WPKH(claimedAddress)) {
-            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh');
+            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh', network);
         }
         else if (Address.isP2TR(claimedAddress)) {
-            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2tr');
+            derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2tr', network);
         }
         else {
             throw new Error('Unable to sign BIP-322 message for unsupported address type.'); // Unsupported address type
         }
         // Check if the derived address correspond to the claimedAddress
-        return (derivedAddresses.mainnet === claimedAddress) || (derivedAddresses.testnet === claimedAddress);
+        return derivedAddresses === claimedAddress;
     }
 
 }

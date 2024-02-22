@@ -1,6 +1,6 @@
 // Import dependencies
-import { Hash } from "fast-sha256";
 import * as bitcoin from 'bitcoinjs-lib';
+import { Hash } from "fast-sha256";
 
 /**
  * Class that handles BIP-322 related operations.

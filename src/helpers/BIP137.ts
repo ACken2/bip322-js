@@ -1,6 +1,6 @@
 // Import dependencies
-import ecc from 'secp256k1';
 import * as bitcoinMessage from 'bitcoinjs-message';
+import ecc from 'secp256k1';
 
 /**
  * Class that implement BIP137-related utility functions.

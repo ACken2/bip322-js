@@ -5,7 +5,9 @@ import * as bitcoin from 'bitcoinjs-lib';
  * Class that implement address-related utility functions.
  */
 class Address {
-
+    static toXOnly (pubKey) {
+        return Buffer.from(pubKey.length === 32 ? pubKey : pubKey.subarray(1, 33))
+      }
     /**
      * Check if a given Bitcoin address is a pay-to-public-key-hash (p2pkh) address.
      * @param address Bitcoin address to be checked
@@ -43,7 +45,7 @@ class Address {
      */
     public static isP2WPKH(address: string) {
         // Check if the provided address is a P2WPKH/P2WSH address
-        if (address.slice(0, 4) === 'bc1q' || address.slice(0, 4) === 'tb1q') {
+        if (/^(bc1q|tb1q|bcrt1q)/.test(address)) {
             // Either a P2WPKH / P2WSH address
             // Convert the address into a scriptPubKey
             const scriptPubKey = this.convertAdressToScriptPubkey(address);
@@ -66,7 +68,7 @@ class Address {
      * @returns True if the provided address is a taproot address, false if otherwise
      */
     public static isP2TR(address: string) {
-        if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
+        if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
             return true; // P2TR address
         }
         else {
@@ -107,6 +109,20 @@ class Address {
     }
 
     /**
+     * Determine network type by checking addresses prefixes
+     * Reference: https://en.bitcoin.it/wiki/List_of_address_prefixes
+     * @param address Bitcoin address
+     * @returns Network type
+     */
+    public static getNetworkFromAddess(address: string) {
+        if (/^(bc1q|bc1p|1|3)/.test(address)) return bitcoin.networks.bitcoin
+        if (/^(tb1q|tb1p|2|m|n)/.test(address)) return bitcoin.networks.testnet
+        if (/^(bcrt1q|bcrt1p)/.test(address)) return bitcoin.networks.regtest
+
+        return bitcoin.networks.bitcoin
+    }
+
+    /**
      * Convert a given Bitcoin address into its corresponding script public key.
      * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/script.py#L607
      * @param address Bitcoin address
@@ -114,44 +130,44 @@ class Address {
      * @throws Error when the provided address is not a valid Bitcoin address
      */
     public static convertAdressToScriptPubkey(address: string) {
-        if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
+        if (address.startsWith('1') || address.startsWith('m') || address.startsWith('n')) {
             // P2PKH address
             return bitcoin.payments.p2pkh({
                 address: address,
-                network: (address[0] === '1') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
-            }).output as Buffer;
+                network: this.getNetworkFromAddess(address)
+            }).output;
         }
-        else if (address[0] === '3' || address[0] === '2') {
+        else if (address.startsWith('3') || address.startsWith('2')) {
             // P2SH address
             return bitcoin.payments.p2sh({
                 address: address,
-                network: (address[0] === '3') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
-            }).output as Buffer;
+                network: this.getNetworkFromAddess(address)
+            }).output;
         }
-        else if (address.slice(0, 4) === 'bc1q' || address.slice(0, 4) === 'tb1q') {
+        else if (/^(bc1q|tb1q|bcrt1q)/.test(address)) {
             // P2WPKH or P2WSH address
-            if (address.length === 42) {
+            if (address.length === 42 || (address.includes('bcrt1q') && address.length === 44)) {
                 // P2WPKH address
                 return bitcoin.payments.p2wpkh({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1q') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
-                }).output as Buffer;
+                    network: this.getNetworkFromAddess(address)
+                }).output;
             }
-            else if (address.length === 62) {
+            else if (address.length === 62 || (address.includes('bcrt1q') && address.length === 64)) {
                 // P2WSH address
                 return bitcoin.payments.p2wsh({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1q') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
-                }).output as Buffer;
+                    network: this.getNetworkFromAddess(address)
+                }).output;
             }
         }
-        else if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
-            if (address.length === 62) {
+        else if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
+            if (address.length === 62 || (address.includes('bcrt1p') && address.length === 64)) {
                 // P2TR address
                 return bitcoin.payments.p2tr({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1p') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
-                }).output as Buffer;
+                    network: this.getNetworkFromAddess(address)
+                }).output;
             }
         }
         throw new Error("Unknown address type");
@@ -163,37 +179,22 @@ class Address {
      * @param addressType Bitcoin address type to be derived, must be either 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh', or 'p2tr'
      * @returns Bitcoin address that correspond to the given public key in both mainnet and testnet
      */
-    public static convertPubKeyIntoAddress(publicKey: Buffer, addressType: 'p2pkh' | 'p2sh-p2wpkh' | 'p2wpkh' | 'p2tr') {
+    public static convertPubKeyIntoAddress(publicKey: Buffer, addressType: 'p2pkh' | 'p2sh-p2wpkh' | 'p2wpkh' | 'p2tr', network: bitcoin.Network = bitcoin.networks.bitcoin) {
         switch (addressType) {
             case 'p2pkh':
-                return {
-                    mainnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
-                }
+                return bitcoin.payments.p2pkh({ pubkey: publicKey, network }).address
             case 'p2sh-p2wpkh':
                 // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/addresses.spec.ts#L70
-                return {
-                    mainnet: bitcoin.payments.p2sh({ 
-                        redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }), 
-                        network: bitcoin.networks.bitcoin 
-                    }).address,
-                    testnet: bitcoin.payments.p2sh({ 
-                        redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }), 
-                        network: bitcoin.networks.testnet 
+                return bitcoin.payments.p2sh({ 
+                        redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network }), 
+                        network 
                     }).address
-                }
             case 'p2wpkh':
-                return {
-                    mainnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
-                }
+                return bitcoin.payments.p2wpkh({ pubkey: publicKey, network }).address
             case 'p2tr':
                 // Convert full-length public key into internal public key if necessary
-                const internalPubkey = publicKey.byteLength === 33 ? publicKey.subarray(1, 33) : publicKey;
-                return {
-                    mainnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address
-                }
+                const internalPubkey = this.toXOnly(publicKey)
+                return bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network }).address
             default:
                 throw new Error('Cannot convert public key into unsupported address type.');
         }
