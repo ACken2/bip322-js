@@ -1,6 +1,6 @@
 {
     "name": "bip322-js",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "A Javascript library that provides utility functions related to the BIP-322 signature scheme",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -19,7 +19,10 @@
         "no-WASM"
     ],
     "author": "Ken Sze <acken2@outlook.com>",
-    "repository": "github:ACken2/bip322-js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ACken2/bip322-js.git"
+    },
     "license": "MIT",
     "devDependencies": {
         "@types/chai": "^4.3.5",
