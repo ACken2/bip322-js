@@ -33,7 +33,7 @@ function generateCompatibleSignatures(base64Signature: string, start: number = 2
     const initialRecId = buffer[0];
     // Loop through the range and replace the first byte
     for (let i = start; i <= end; i++) {
-        // Only recId with a difference of the multiple of 4 is compatible
+        // Only header with a difference of the multiple of 4 is compatible since recId is a number from 0 - 3
         // For example, if initialRecId is 32, then only 28, 36, 40 are compatible
         if (Math.abs(i - initialRecId) % 4 == 0) {
             // Copy the buffer to avoid modifying the original data

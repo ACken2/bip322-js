@@ -302,7 +302,7 @@ class Address {
     public static uncompressPublicKey(compressedPublicKey: Buffer): Buffer {
         // Initialize elliptic curve
         const ec = new EC('secp256k1');
-        // Try to compress the provided public key
+        // Try to uncompress the provided public key
         try {
             // Create a key pair from the compressed public key buffer
             const keyPair = ec.keyFromPublic(Buffer.from(compressedPublicKey));
