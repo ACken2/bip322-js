@@ -360,4 +360,90 @@ describe('Address Test', () => {
 
     });
 
+    describe('Bitcoin Address Validation Tests', function() {
+
+        // Test valid mainnet addresses
+        it('Return true for valid mainnet addresses', function() {
+            // Arrange
+            const mainnetP2PKHAddress = '1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6';
+            const mainnetP2SHAddress = '3CVQuRpFMnDV71ABpXNg9yhUpgsWL1L8y6';
+            const mainnetP2WPKHAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l';
+            const mainnetP2TRAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
+            // Act and Assert
+            expect(Address.isValidBitcoinAddress(mainnetP2PKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(mainnetP2SHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(mainnetP2WPKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(mainnetP2TRAddress)).to.be.true;
+        });
+      
+        // Test valid testnet addresses
+        it('Return true for valid testnet addresses', function() {
+            // Arrange
+            const testnetP2PKHAddress = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+            const testnetP2SHAddress = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+            const testnetP2WPKHAddress = 'tb1q9vza2e8x573nczrlzms0wvx3gsqjx7vaxwd45v';
+            const testnetP2TRAddress = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
+            // Act and Assert
+            expect(Address.isValidBitcoinAddress(testnetP2PKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(testnetP2SHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(testnetP2WPKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(testnetP2TRAddress)).to.be.true;
+        });
+      
+        // Test valid regtest addresses
+        it('Return true for valid regtest addresses', function() {
+            // Arrange
+            const regtestP2PKHAddress = 'msiGFK1PjCk8E6FXeoGkQPTscmcpyBdkgS';
+            const regtestP2SHAddress = '2NEb8N5B9jhPUCBchz16BB7bkJk8VCZQjf3';
+            const regtestP2WPKHAddress = 'bcrt1q39c0vrwpgfjkhasu5mfke9wnym45nydfwaeems';
+            const regtestP2TRAddress = 'bcrt1pema6mzjsr3849rg5e5ls9lfck46zc3muph65rmskt28ravzzzxwsz99c2q';
+            // Act and Assert
+            expect(Address.isValidBitcoinAddress(regtestP2PKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(regtestP2SHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(regtestP2WPKHAddress)).to.be.true;
+            expect(Address.isValidBitcoinAddress(regtestP2TRAddress)).to.be.true;
+        });
+      
+        // Test invalid addresses
+        it('Return false for invalid addresses', function() {
+            // Arrange
+            const invalidAddressMainnet = '1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa5'; // From 1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6
+            const invalidAddressMainnetTwo = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt2'; // From bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3
+            const invalidAddressTesnet = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub1'; // From 2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9
+            const invalidAddressRegtest = 'bcrt1q39c0vrwpgfjkhasu5mfke9wnym45nydfwaeema'; // From bcrt1q39c0vrwpgfjkhasu5mfke9wnym45nydfwaeems
+            // Act and Assert
+            expect(Address.isValidBitcoinAddress(invalidAddressMainnet)).to.be.false;
+            expect(Address.isValidBitcoinAddress(invalidAddressMainnetTwo)).to.be.false;
+            expect(Address.isValidBitcoinAddress(invalidAddressTesnet)).to.be.false;
+            expect(Address.isValidBitcoinAddress(invalidAddressRegtest)).to.be.false;
+        });
+      
+    });
+
+    describe('Public Key Cmpression Function', function() {
+
+        it('Compress a uncompressed public key', function() {
+            // Arrange
+            const uncompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700e', 'hex');
+            const compressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
+            // Act
+            const compressed = Address.compressPublicKey(uncompressedPublicKey);
+            // Assert
+            expect(compressed).to.deep.equal(compressedPublicKey);
+        });
+
+        it('Throw with invalid uncompressed public key', function() {
+            // Arrange
+            const notUncompressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
+            const notUncompressedPublicKeyAsWell = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700f', 'hex');
+            // Act
+            const compressAttempt = Address.compressPublicKey.bind(notUncompressedPublicKey);
+            const compressAttemptTwo = Address.compressPublicKey.bind(notUncompressedPublicKeyAsWell);
+            // Assert
+            expect(compressAttempt).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+            expect(compressAttemptTwo).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+        });
+
+    });
+
 });
