@@ -1,4 +1,5 @@
 // Import dependency
+import { ec as EC } from 'elliptic';
 import * as bitcoin from 'bitcoinjs-lib';
 
 /**
@@ -196,6 +197,121 @@ class Address {
                 }
             default:
                 throw new Error('Cannot convert public key into unsupported address type.');
+        }
+    }
+
+    /**
+     * Validates a given Bitcoin address.
+     * This method checks if the provided Bitcoin address is valid by attempting to decode it
+     * for different Bitcoin networks: mainnet, testnet, and regtest. The method uses the
+     * bitcoinjs-lib's address module for decoding.
+     * 
+     * The process is as follows:
+     * 1. Attempt to decode the address for the Bitcoin mainnet. If decoding succeeds,
+     *    the method returns true, indicating the address is valid for mainnet.
+     * 2. If the first step fails, catch the resulting error and attempt to decode the
+     *    address for the Bitcoin testnet. If decoding succeeds, the method returns true,
+     *    indicating the address is valid for testnet.
+     * 3. If the second step fails, catch the resulting error and attempt to decode the
+     *    address for the Bitcoin regtest network. If decoding succeeds, the method returns
+     *    true, indicating the address is valid for regtest.
+     * 4. If all attempts fail, the method returns false, indicating the address is not valid
+     *    for any of the checked networks.
+     * 
+     * @param address The Bitcoin address to validate.
+     * @return boolean Returns true if the address is valid for any of the Bitcoin networks,
+     *                 otherwise returns false.
+     */
+    public static isValidBitcoinAddress(address: string): boolean {
+        try {
+            // Attempt to decode the address using bitcoinjs-lib's address module at mainnet
+            bitcoin.address.toOutputScript(address, bitcoin.networks.bitcoin);
+            return true; // If decoding succeeds, the address is valid
+        } 
+        catch (error) { }
+        try {
+            // Attempt to decode the address using bitcoinjs-lib's address module at testnet
+            bitcoin.address.toOutputScript(address, bitcoin.networks.testnet);
+            return true; // If decoding succeeds, the address is valid
+        }
+        catch (error) { }
+        try {
+            // Attempt to decode the address using bitcoinjs-lib's address module at regtest
+            bitcoin.address.toOutputScript(address, bitcoin.networks.regtest);
+            return true; // If decoding succeeds, the address is valid
+        }
+        catch (error) { }
+        return false; // Probably not a valid address
+    }
+
+    /**
+     * Compresses an uncompressed public key using the elliptic curve secp256k1.
+     * This method takes a public key in its uncompressed form and returns a compressed
+     * representation of the public key. Elliptic curve public keys can be represented in 
+     * a shorter form known as compressed format which saves space and still retains the 
+     * full public key's capabilities. The method uses the elliptic library to convert the
+     * uncompressed public key into its compressed form.
+     * 
+     * The steps involved in the process are:
+     * 1. Initialize a new elliptic curve instance for the secp256k1 curve.
+     * 2. Create a key pair object from the uncompressed public key buffer.
+     * 3. Extract the compressed public key from the key pair object.
+     * 4. Return the compressed public key as a Buffer object.
+     * 
+     * @param uncompressedPublicKey A Buffer containing the uncompressed public key.
+     * @return Buffer Returns a Buffer containing the compressed public key.
+     * @throws Error Throws an error if the provided public key cannot be compressed,
+     *         typically indicating that the key is not valid.
+     */
+    public static compressPublicKey(uncompressedPublicKey: Buffer): Buffer {
+        // Initialize elliptic curve
+        const ec = new EC('secp256k1');
+        // Try to compress the provided public key
+        try {
+            // Create a key pair from the uncompressed public key buffer
+            const keyPair = ec.keyFromPublic(Buffer.from(uncompressedPublicKey));
+            // Get the compressed public key as a Buffer
+            const compressedPublicKey = Buffer.from(keyPair.getPublic(true, 'array'));
+            return compressedPublicKey;
+        }
+        catch (err) {
+            throw new Error('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+        }
+    }
+
+    /**
+     * Uncompresses a given public key using the elliptic curve secp256k1.
+     * This method accepts a compressed public key and attempts to convert it into its
+     * uncompressed form. Public keys are often compressed to save space, but certain
+     * operations require the full uncompressed key. This method uses the elliptic
+     * library to perform the conversion.
+     *
+     * The function operates as follows:
+     * 1. Initialize a new elliptic curve instance using secp256k1.
+     * 2. Attempt to create a key pair from the compressed public key buffer.
+     * 3. Extract the uncompressed public key from the key pair object.
+     * 4. Return the uncompressed public key as a Buffer object.
+     * If the compressed public key provided is invalid and cannot be uncompressed, 
+     * the method will throw an error with a descriptive message.
+     * 
+     * @param compressedPublicKey A Buffer containing the compressed public key.
+     * @return Buffer The uncompressed public key as a Buffer.
+     * @throws Error Throws an error if the provided public key cannot be uncompressed,
+     *         typically indicating that the key is not valid.
+     */
+    public static uncompressPublicKey(compressedPublicKey: Buffer): Buffer {
+        // Initialize elliptic curve
+        const ec = new EC('secp256k1');
+        // Try to compress the provided public key
+        try {
+            // Create a key pair from the compressed public key buffer
+            const keyPair = ec.keyFromPublic(Buffer.from(compressedPublicKey));
+            // Get the compressed public key as a Buffer
+            const uncompressedPublicKey = Buffer.from(keyPair.getPublic(false, 'array'));
+            return uncompressedPublicKey;
+        }
+        catch (err) {
+            throw new Error('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
         }
     }
 

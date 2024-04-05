@@ -9,6 +9,44 @@ import ecc from '@bitcoinerlab/secp256k1';
 // Import module to be tested
 import { Verifier } from '../src';
 
+/**
+ * Given a valid BIP-137 signature, generate compatible valid signatures with different header flag.
+ *
+ * In BIP-137 signature scheme, only the recId, which is a number from 0 - 3 inclusive, is a part of the
+ * signature. The header is composed of the recId and a constant which indicates address type.
+ * 
+ * Based on this library's concept of "proving that you own a private key, proves that you own all associated address",
+ * this function is used to generate compatible signatures with different address type regardless of the address type
+ * indicated in the BIP-137 signature.
+ *
+ * @param {string} base64Signature - The base64 signature string to be modified.
+ * @param {number} start - The start of the decimal range for the header constant, defaults to 27 for P2PKH uncompressed address.
+ * @param {number} end - The end of the decimal range for the header constant, defaults to 42 for Segwit Bech32 address.
+ * @returns {string[]} An array of compatible base64 encoded signatures.
+ */
+function generateCompatibleSignatures(base64Signature: string, start: number = 27, end: number = 42): string[] {
+    // Decode the base64 string to a Buffer
+    let buffer = Buffer.from(base64Signature, 'base64');
+    // Array for storing compatible signatures
+    const modifiedBase64Strings: string[] = [];
+    // Obtain the initial recId in the given signature
+    const initialRecId = buffer[0];
+    // Loop through the range and replace the first byte
+    for (let i = start; i <= end; i++) {
+        // Only recId with a difference of the multiple of 4 is compatible
+        // For example, if initialRecId is 32, then only 28, 36, 40 are compatible
+        if (Math.abs(i - initialRecId) % 4 == 0) {
+            // Copy the buffer to avoid modifying the original data
+            let modifiedBuffer = Buffer.from(buffer);
+            // Replace the first byte with the current value in the range
+            modifiedBuffer[0] = i;
+            // Encode the modified buffer back to a base64 string and add to the result array
+            modifiedBase64Strings.push(modifiedBuffer.toString('base64'));
+        }
+    }
+    return modifiedBase64Strings;
+}
+
 // Tests
 describe('Verifier Test', () => {
 
@@ -43,7 +81,13 @@ describe('Verifier Test', () => {
     it('Can verify legacy BIP-137 signature from P2SH-P2WPKH, P2WPKH, and P2TR address', () => {
         // Arrange
         const message = 'Hello World';
-        const signature = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo='; // Signed by public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
+        // Signed by public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc" using header 32
+        const signatureBase = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo=';
+        const signatures = generateCompatibleSignatures(signatureBase, 27, 42); // Range of header range that is in-spec with BIP-137
+        expect(signatures).to.include(signatureBase, "Error in generating signatures with different flags!");
+        // Addresses derived from uncompressed public key "04f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc96668ad9ba5d1b2e9db47ecd5e2b484f9b955740dcabbe61d886d0ee6f5dc1b8"
+        const p2pkhMainnetValidUncompress = "1Nji71ru2dMty4CPGNoXsqoU4byok8toqm";
+        const p2pkhTestnetValidUncompress = "n3FfQ4wsqeo9kAfzywmuhm1nvbaWc4TpvC";
         // Addresses derived from public key "02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc"
         const p2pkhMainnetValid = "1QDZfWJTVXqHFmJFRkyrnidvHyPyG5bynY";
         const p2pkhTestnetValid = "n4jWxZPSJZGY2sms9KxEcdrF9xzgEbrHHj";
@@ -62,53 +106,52 @@ describe('Verifier Test', () => {
         const p2wpkhTestnetInvalid = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
         const p2trMainnetInvalid = "bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
         const p2trTestnetInvalid = "tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
-        // Invalid address
-        const invalidAddress = "bc1apv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3";
-        const invalidAddressTestnet = "tb1a000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp";
 
         // Act
-        const p2pkhMainnetValidResult = Verifier.verifySignature(p2pkhMainnetValid, message, signature);
-        const p2pkhTestnetValidResult = Verifier.verifySignature(p2pkhTestnetValid, message, signature);
-        const p2shMainnetValidResult = Verifier.verifySignature(p2shMainnetValid, message, signature);
-        const p2shTestnetValidResult = Verifier.verifySignature(p2shTestnetValid, message, signature);
-        const p2wpkhMainnetValidResult = Verifier.verifySignature(p2wpkhMainnetValid, message, signature);
-        const p2wpkhTestnetValidResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature);
-        const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
-        const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature);
+        for (let signature of signatures) {
 
-        const p2pkhMainnetInvalidResult = Verifier.verifySignature(p2pkhMainnetInvalid, message, signature);
-        const p2pkhTestnetInvalidResult = Verifier.verifySignature(p2pkhTestnetInvalid, message, signature);
-        const p2shMainnetInvalidResult = Verifier.verifySignature(p2shMainnetInvalid, message, signature);
-        const p2shTestnetInvalidResult = Verifier.verifySignature(p2shTestnetInvalid, message, signature);
-        const p2wpkhMainnetInvalidResult = Verifier.verifySignature(p2wpkhMainnetInvalid, message, signature);
-        const p2wpkhTestnetInvalidResult = Verifier.verifySignature(p2wpkhTestnetInvalid, message, signature);
-        const p2trMainnetInvalidResult = Verifier.verifySignature(p2trMainnetInvalid, message, signature);
-        const p2trTestnetInvalidResult = Verifier.verifySignature(p2trTestnetInvalid, message, signature);
+            const p2pkhMainnetValidUncompressResult = Verifier.verifySignature(p2pkhMainnetValidUncompress, message, signature);
+            const p2pkhTestnetValidUncompressResult = Verifier.verifySignature(p2pkhTestnetValidUncompress, message, signature);
+            const p2pkhMainnetValidResult = Verifier.verifySignature(p2pkhMainnetValid, message, signature);
+            const p2pkhTestnetValidResult = Verifier.verifySignature(p2pkhTestnetValid, message, signature);
+            const p2shMainnetValidResult = Verifier.verifySignature(p2shMainnetValid, message, signature);
+            const p2shTestnetValidResult = Verifier.verifySignature(p2shTestnetValid, message, signature);
+            const p2wpkhMainnetValidResult = Verifier.verifySignature(p2wpkhMainnetValid, message, signature);
+            const p2wpkhTestnetValidResult = Verifier.verifySignature(p2wpkhTestnetValid, message, signature);
+            const p2trMainnetValidResult = Verifier.verifySignature(p2trMainnetValid, message, signature);
+            const p2trTestnetValidResult = Verifier.verifySignature(p2trTestnetValid, message, signature);
 
-        const invalidAddressResult = Verifier.verifySignature(invalidAddress, message, signature);
-        const invalidAddressTestnetResult = Verifier.verifySignature(invalidAddressTestnet, message, signature);
+            const p2pkhMainnetInvalidResult = Verifier.verifySignature(p2pkhMainnetInvalid, message, signature);
+            const p2pkhTestnetInvalidResult = Verifier.verifySignature(p2pkhTestnetInvalid, message, signature);
+            const p2shMainnetInvalidResult = Verifier.verifySignature(p2shMainnetInvalid, message, signature);
+            const p2shTestnetInvalidResult = Verifier.verifySignature(p2shTestnetInvalid, message, signature);
+            const p2wpkhMainnetInvalidResult = Verifier.verifySignature(p2wpkhMainnetInvalid, message, signature);
+            const p2wpkhTestnetInvalidResult = Verifier.verifySignature(p2wpkhTestnetInvalid, message, signature);
+            const p2trMainnetInvalidResult = Verifier.verifySignature(p2trMainnetInvalid, message, signature);
+            const p2trTestnetInvalidResult = Verifier.verifySignature(p2trTestnetInvalid, message, signature);
 
-        // Assert
-        expect(p2pkhMainnetValidResult).to.be.true;
-        expect(p2pkhTestnetValidResult).to.be.true;
-        expect(p2shMainnetValidResult).to.be.true;
-        expect(p2shTestnetValidResult).to.be.true;
-        expect(p2wpkhMainnetValidResult).to.be.true;
-        expect(p2wpkhTestnetValidResult).to.be.true;
-        expect(p2trMainnetValidResult).to.be.true;
-        expect(p2trTestnetValidResult).to.be.true;
+            // Assert
+            expect(p2pkhMainnetValidUncompressResult).to.be.true;
+            expect(p2pkhTestnetValidUncompressResult).to.be.true;
+            expect(p2pkhMainnetValidResult).to.be.true;
+            expect(p2pkhTestnetValidResult).to.be.true;
+            expect(p2shMainnetValidResult).to.be.true;
+            expect(p2shTestnetValidResult).to.be.true;
+            expect(p2wpkhMainnetValidResult).to.be.true;
+            expect(p2wpkhTestnetValidResult).to.be.true;
+            expect(p2trMainnetValidResult).to.be.true;
+            expect(p2trTestnetValidResult).to.be.true;
 
-        expect(p2pkhMainnetInvalidResult).to.be.false;
-        expect(p2pkhTestnetInvalidResult).to.be.false;
-        expect(p2shMainnetInvalidResult).to.be.false;
-        expect(p2shTestnetInvalidResult).to.be.false;
-        expect(p2wpkhMainnetInvalidResult).to.be.false;
-        expect(p2wpkhTestnetInvalidResult).to.be.false;
-        expect(p2trMainnetInvalidResult).to.be.false;
-        expect(p2trTestnetInvalidResult).to.be.false;
+            expect(p2pkhMainnetInvalidResult).to.be.false;
+            expect(p2pkhTestnetInvalidResult).to.be.false;
+            expect(p2shMainnetInvalidResult).to.be.false;
+            expect(p2shTestnetInvalidResult).to.be.false;
+            expect(p2wpkhMainnetInvalidResult).to.be.false;
+            expect(p2wpkhTestnetInvalidResult).to.be.false;
+            expect(p2trMainnetInvalidResult).to.be.false;
+            expect(p2trTestnetInvalidResult).to.be.false;
 
-        expect(invalidAddressResult).to.be.false;
-        expect(invalidAddressTestnetResult).to.be.false;
+        }
     });
 
     it('Can verify and falsify BIP-322 signature for P2SH-P2WPKH address', () => {
@@ -331,10 +374,10 @@ describe('Verifier Test', () => {
         const resultP2Tr = Verifier.verifySignature.bind(Verifier, malformedP2TR, message, signatureP2TR);
 
         // Assert
-        expect(resultP2PKH).to.throw(); // Throw by bitcoinjs-message library
-        expect(resultP2WPKHInP2SH).to.throw(); // Throw by bitcoinjs-lib
-        expect(resultP2WPKH).to.throws(); // Throw by helper/Address
-        expect(resultP2Tr).to.throws(); // Throw by helper/Address
+        expect(resultP2PKH).to.throw("Invalid Bitcoin address is provided.");
+        expect(resultP2WPKHInP2SH).to.throw("Invalid Bitcoin address is provided.");
+        expect(resultP2WPKH).to.throws("Invalid Bitcoin address is provided.");
+        expect(resultP2Tr).to.throws("Invalid Bitcoin address is provided.");
     });
 
     it('Reject Schnorr signature with incorrect length', () => {
@@ -418,6 +461,16 @@ describe('Verifier Test', () => {
         expect(resultNone).to.throws('Invalid SIGHASH used in signature. Must be either SIGHASH_ALL or SIGHASH_DEFAULT.');
         expect(resultOutputMask).to.throws('Invalid SIGHASH used in signature. Must be either SIGHASH_ALL or SIGHASH_DEFAULT.');
         expect(resultSingle).to.throws('Invalid SIGHASH used in signature. Must be either SIGHASH_ALL or SIGHASH_DEFAULT.');
+    });
+
+    it('Fix issue #7', () => {
+        // Arrange
+        const address = "3Agx7m86mJgVbLZP3Wk1qjYkzv6gGemz9X";
+        const message = "48656c6c6f20426974636f696e2034352e3133302e3130352e313436";
+        const signature = "JDkLNaM8vWoobA34PGQE9FIZaLF7peRh4r7DOqOHls1cP1DPwR3Hcy26+zk6yRb0qtJRHEdUflVxkScbwsOCSMw=";
+
+        // Act and Assert
+        expect(Verifier.verifySignature(address, message, signature)).to.be.true;
     });
 
 });

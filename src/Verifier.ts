@@ -21,6 +21,10 @@ class Verifier {
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
     public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
+        // Check whether the given signerAddress is valid
+        if (!Address.isValidBitcoinAddress(signerAddress)) {
+            throw new Error("Invalid Bitcoin address is provided.");
+        }
         // Handle legacy BIP-137 signature
         // For P2PKH address, assume the signature is also a legacy signature
         if (Address.isP2PKH(signerAddress) || BIP137.isBIP137Signature(signatureBase64)) {
@@ -121,44 +125,98 @@ class Verifier {
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
     private static verifyBIP137Signature(signerAddress: string, message: string, signatureBase64: string) {
-        if (Address.isP2PKH(signerAddress)) {
-            return bitcoinMessage.verify(message, signerAddress, signatureBase64);
+        // Recover the public key associated with the signature
+        const publicKeySignedRaw = BIP137.derivePubKey(message, signatureBase64);
+        // Compress and uncompress the public key if necessary
+        let publicKeySignedUncompressed: Buffer;
+        let publicKeySigned: Buffer;
+        if (publicKeySignedRaw.byteLength === 65) {
+            publicKeySignedUncompressed = publicKeySignedRaw; // The key recovered is an uncompressed key
+            publicKeySigned = Address.compressPublicKey(publicKeySignedRaw);
         }
         else {
-            // Recover the public key associated with the signature
-            const publicKeySigned = BIP137.derivePubKey(message, signatureBase64);
-            // Set the equivalent legacy address to prepare for validation from bitcoinjs-message
-            const legacySigningAddress = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2pkh').mainnet;
-            // Make sure that public key recovered corresponds to the claimed signing address
-            if (Address.isP2SH(signerAddress)) {
-                // Assume it is a P2SH-P2WPKH address, derive a P2SH-P2WPKH address based on the public key recovered
-                const p2shAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2sh-p2wpkh');
-                // Assert that the derived address is identical to the claimed signing address
-                if (p2shAddressDerived.mainnet !== signerAddress && p2shAddressDerived.testnet !== signerAddress) {
-                    return false; // Derived address did not match with the claimed signing address
-                }
+            publicKeySignedUncompressed = Address.uncompressPublicKey(publicKeySignedRaw);
+            publicKeySigned = publicKeySignedRaw; // The key recovered is a compressed key
+        }
+        // Obtain the equivalent signing address in all address types (except taproot) to prepare for validation from bitcoinjs-message
+        // Taproot address is not needed since technically BIP-137 signatures does not support taproot address
+        const p2pkhSigningAddressUncompressed = Address.convertPubKeyIntoAddress(publicKeySignedUncompressed, 'p2pkh').mainnet;
+        const p2pkhSigningAddressCompressed = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2pkh').mainnet;
+        const p2shSigningAddress = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2sh-p2wpkh').mainnet;
+        const p2wpkhSigningAddress = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2wpkh').mainnet;
+        // Make sure that public key recovered corresponds to the claimed signing address
+        if (Address.isP2PKH(signerAddress)) {
+            // Derive P2PKH address from both the uncompressed raw public key, and the compressed public key
+            const p2pkhAddressDerivedUncompressed = Address.convertPubKeyIntoAddress(publicKeySignedUncompressed, 'p2pkh');
+            const p2pkhAddressDerivedCompressed = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2pkh');
+            // Assert that the derived address is identical to the claimed signing address
+            if (
+                p2pkhAddressDerivedUncompressed.mainnet !== signerAddress && p2pkhAddressDerivedUncompressed.testnet !== signerAddress &&
+                p2pkhAddressDerivedCompressed.mainnet !== signerAddress && p2pkhAddressDerivedCompressed.testnet !== signerAddress
+            ) {
+                return false; // Derived address did not match with the claimed signing address
             }
-            else if (Address.isP2WPKH(signerAddress)) {
-                // Assume it is a P2WPKH address, derive a P2WPKH address based on the public key recovered
-                const p2wpkhAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2wpkh');
-                // Assert that the derived address is identical to the claimed signing address
-                if (p2wpkhAddressDerived.mainnet !== signerAddress && p2wpkhAddressDerived.testnet !== signerAddress) {
-                    return false; // Derived address did not match with the claimed signing address
-                }
+        }
+        else if (Address.isP2SH(signerAddress)) {
+            // Assume it is a P2SH-P2WPKH address, derive a P2SH-P2WPKH address based on the public key recovered
+            const p2shAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2sh-p2wpkh');
+            // Assert that the derived address is identical to the claimed signing address
+            if (p2shAddressDerived.mainnet !== signerAddress && p2shAddressDerived.testnet !== signerAddress) {
+                return false; // Derived address did not match with the claimed signing address
             }
-            else if (Address.isP2TR(signerAddress)) {
-                // Assume it is a P2TR address, derive a P2TR address based on the public key recovered
-                const p2trAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2tr');
-                // Assert that the derived address is identical to the claimed signing address
-                if (p2trAddressDerived.mainnet !== signerAddress && p2trAddressDerived.testnet !== signerAddress) {
-                    return false; // Derived address did not match with the claimed signing address
-                }
+        }
+        else if (Address.isP2WPKH(signerAddress)) {
+            // Assume it is a P2WPKH address, derive a P2WPKH address based on the public key recovered
+            const p2wpkhAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2wpkh');
+            // Assert that the derived address is identical to the claimed signing address
+            if (p2wpkhAddressDerived.mainnet !== signerAddress && p2wpkhAddressDerived.testnet !== signerAddress) {
+                return false; // Derived address did not match with the claimed signing address
             }
-            else {
-                return false; // Unsupported address type
+        }
+        else {
+            // Assume it is a P2TR address, derive a P2TR address based on the public key recovered
+            const p2trAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2tr');
+            // Assert that the derived address is identical to the claimed signing address
+            if (p2trAddressDerived.mainnet !== signerAddress && p2trAddressDerived.testnet !== signerAddress) {
+                return false; // Derived address did not match with the claimed signing address
             }
-            // Validate the signature using bitcoinjs-message if address assertion succeeded
-            return bitcoinMessage.verify(message, legacySigningAddress, signatureBase64);
+        }
+        // Validate the signature using bitcoinjs-message if address assertion succeeded
+        // Accept the signature if it originates from any address derivable from the public key
+        const validity = (
+            this.bitcoinMessageVerifyWrap(message, p2pkhSigningAddressUncompressed, signatureBase64) || 
+            this.bitcoinMessageVerifyWrap(message, p2pkhSigningAddressCompressed, signatureBase64) || 
+            this.bitcoinMessageVerifyWrap(message, p2shSigningAddress, signatureBase64) || 
+            this.bitcoinMessageVerifyWrap(message, p2wpkhSigningAddress, signatureBase64)
+        );
+        return validity;
+    }
+
+    /**
+     * Wraps the Bitcoin message verification process to avoid throwing exceptions.
+     * This method attempts to verify a BIP-137 message using the provided address and 
+     * signature. It encapsulates the verification process within a try-catch block, 
+     * catching any errors that occur during verification and returning false instead 
+     * of allowing the exception to propagate.
+     * 
+     * The process is as follows:
+     * 1. The `bitcoinjs-message.verify` function is called with the message, address,
+     *    and signature provided in Base64 encoding.
+     * 2. If the verification is successful, the method returns true.
+     * 3. If any error occurs during the verification, the method catches the error 
+     *    and returns false, signaling an unsuccessful verification.
+     * 
+     * @param message The Bitcoin message to be verified.
+     * @param address The Bitcoin address to which the message is allegedly signed.
+     * @param signatureBase64 The Base64 encoded signature corresponding to the message.
+     * @return boolean Returns true if the message is successfully verified, otherwise false.
+     */
+    private static bitcoinMessageVerifyWrap(message: string, address: string, signatureBase64: string) {
+        try {
+            return bitcoinMessage.verify(message, address, signatureBase64);
+        } 
+        catch (err) {
+            return false; // Instead of throwing, just return false
         }
     }
 
