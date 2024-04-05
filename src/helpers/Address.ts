@@ -260,7 +260,8 @@ class Address {
      * 
      * @param uncompressedPublicKey A Buffer containing the uncompressed public key.
      * @return Buffer Returns a Buffer containing the compressed public key.
-     * @throws Error when the provided key is not a valid uncompressed public key.
+     * @throws Error Throws an error if the provided public key cannot be compressed,
+     *         typically indicating that the key is not valid.
      */
     public static compressPublicKey(uncompressedPublicKey: Buffer): Buffer {
         // Initialize elliptic curve
@@ -275,6 +276,42 @@ class Address {
         }
         catch (err) {
             throw new Error('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+        }
+    }
+
+    /**
+     * Uncompresses a given public key using the elliptic curve secp256k1.
+     * This method accepts a compressed public key and attempts to convert it into its
+     * uncompressed form. Public keys are often compressed to save space, but certain
+     * operations require the full uncompressed key. This method uses the elliptic
+     * library to perform the conversion.
+     *
+     * The function operates as follows:
+     * 1. Initialize a new elliptic curve instance using secp256k1.
+     * 2. Attempt to create a key pair from the compressed public key buffer.
+     * 3. Extract the uncompressed public key from the key pair object.
+     * 4. Return the uncompressed public key as a Buffer object.
+     * If the compressed public key provided is invalid and cannot be uncompressed, 
+     * the method will throw an error with a descriptive message.
+     * 
+     * @param compressedPublicKey A Buffer containing the compressed public key.
+     * @return Buffer The uncompressed public key as a Buffer.
+     * @throws Error Throws an error if the provided public key cannot be uncompressed,
+     *         typically indicating that the key is not valid.
+     */
+    public static uncompressPublicKey(compressedPublicKey: Buffer): Buffer {
+        // Initialize elliptic curve
+        const ec = new EC('secp256k1');
+        // Try to compress the provided public key
+        try {
+            // Create a key pair from the compressed public key buffer
+            const keyPair = ec.keyFromPublic(Buffer.from(compressedPublicKey));
+            // Get the compressed public key as a Buffer
+            const uncompressedPublicKey = Buffer.from(keyPair.getPublic(false, 'array'));
+            return uncompressedPublicKey;
+        }
+        catch (err) {
+            throw new Error('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
         }
     }
 
