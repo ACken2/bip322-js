@@ -1,8 +1,8 @@
 // Import dependencies
 import BIP322 from "./BIP322";
-import { Address, BIP137 } from "./helpers";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
+import { Address, BIP137, Key } from "./helpers";
 import * as bitcoinMessage from 'bitcoinjs-message';
 import { decodeScriptSignature } from './bitcoinjs';
 
@@ -132,10 +132,10 @@ class Verifier {
         let publicKeySigned: Buffer;
         if (publicKeySignedRaw.byteLength === 65) {
             publicKeySignedUncompressed = publicKeySignedRaw; // The key recovered is an uncompressed key
-            publicKeySigned = Address.compressPublicKey(publicKeySignedRaw);
+            publicKeySigned = Key.compressPublicKey(publicKeySignedRaw);
         }
         else {
-            publicKeySignedUncompressed = Address.uncompressPublicKey(publicKeySignedRaw);
+            publicKeySignedUncompressed = Key.uncompressPublicKey(publicKeySignedRaw);
             publicKeySigned = publicKeySignedRaw; // The key recovered is a compressed key
         }
         // Obtain the equivalent signing address in all address types (except taproot) to prepare for validation from bitcoinjs-message

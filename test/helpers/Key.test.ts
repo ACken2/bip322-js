@@ -43,4 +43,52 @@ describe('Key Test', () => {
 
     });
 
+    describe('Public Key Cmpression Function', function() {
+
+        it('Compress a uncompressed public key', function() {
+            // Arrange
+            const uncompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700e', 'hex');
+            const compressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
+            // Act
+            const compressed = Key.compressPublicKey(uncompressedPublicKey);
+            // Assert
+            expect(compressed).to.deep.equal(compressedPublicKey);
+        });
+
+        it('Throw with invalid uncompressed public key', function() {
+            // Arrange
+            const notUncompressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
+            const notUncompressedPublicKeyAsWell = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700f', 'hex');
+            // Act
+            const compressAttempt = Key.compressPublicKey.bind(notUncompressedPublicKey);
+            const compressAttemptTwo = Key.compressPublicKey.bind(notUncompressedPublicKeyAsWell);
+            // Assert
+            expect(compressAttempt).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+            expect(compressAttemptTwo).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
+        });
+
+        it('Uncompress a compressed public key', function() {
+            // Arrange
+            const uncompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700e', 'hex');
+            const compressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
+            // Act
+            const uncompressed = Key.uncompressPublicKey(compressedPublicKey);
+            // Assert
+            expect(uncompressed).to.deep.equal(uncompressedPublicKey);
+        });
+
+        it('Throw with invalid compressed public key', function() {
+            // Arrange
+            const notCompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700f', 'hex');
+            const notCompressedPublicKeyAsWell = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599e', 'hex');
+            // Act
+            const uncompressAttempt = Key.uncompressPublicKey.bind(notCompressedPublicKey);
+            const uncompressAttemptTwo = Key.uncompressPublicKey.bind(notCompressedPublicKeyAsWell);
+            // Assert
+            expect(uncompressAttempt).to.throws('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
+            expect(uncompressAttemptTwo).to.throws('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
+        });
+
+    });
+
 });
