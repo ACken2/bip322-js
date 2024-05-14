@@ -1,4 +1,5 @@
 // Import dependency
+import Key from "./Key";
 import { ec as EC } from 'elliptic';
 import * as bitcoin from 'bitcoinjs-lib';
 
@@ -190,7 +191,7 @@ class Address {
                 }
             case 'p2tr':
                 // Convert full-length public key into internal public key if necessary
-                const internalPubkey = publicKey.byteLength === 33 ? publicKey.subarray(1, 33) : publicKey;
+                const internalPubkey = Key.toXOnly(publicKey);
                 return {
                     mainnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.bitcoin }).address,
                     testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address
