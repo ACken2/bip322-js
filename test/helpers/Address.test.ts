@@ -315,12 +315,16 @@ describe('Address Test', () => {
             // Expected address for the private key L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k
             const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
             const p2pkhAddressTestnet = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+            const p2pkhAddressRegtest = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
             const p2shAddress = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb';
             const p2shAddressTestnet = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+            const p2shAddressRegtest = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
             const p2wpkhAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l';
             const p2wpkhAddressTestnet = 'tb1q9vza2e8x573nczrlzms0wvx3gsqjx7vaxwd45v';
+            const p2wpkhAddressRegtest = 'bcrt1q9vza2e8x573nczrlzms0wvx3gsqjx7vay85cr9';
             const p2trAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
             const p2trAddressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
+            const p2trAddressRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
 
             // Act
             const p2pkhAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
@@ -332,14 +336,19 @@ describe('Address Test', () => {
             // Assert
             expect(p2pkhAddressGenerated.mainnet).to.equal(p2pkhAddress);
             expect(p2pkhAddressGenerated.testnet).to.equal(p2pkhAddressTestnet);
+            expect(p2pkhAddressGenerated.regtest).to.equal(p2pkhAddressRegtest);
             expect(p2shAddressGenerated.mainnet).to.equal(p2shAddress);
             expect(p2shAddressGenerated.testnet).to.equal(p2shAddressTestnet);
+            expect(p2shAddressGenerated.regtest).to.equal(p2shAddressRegtest);
             expect(p2wpkhAddressGenerated.mainnet).to.equal(p2wpkhAddress);
             expect(p2wpkhAddressGenerated.testnet).to.equal(p2wpkhAddressTestnet);
+            expect(p2wpkhAddressGenerated.regtest).to.equal(p2wpkhAddressRegtest);
             expect(p2trAddressGenerated.mainnet).to.equal(p2trAddress);
             expect(p2trAddressGenerated.testnet).to.equal(p2trAddressTestnet);
+            expect(p2trAddressGenerated.regtest).to.equal(p2trAddressRegtest);
             expect(p2trAddressGeneratedInternalPubKey.mainnet).to.equal(p2trAddress);
             expect(p2trAddressGeneratedInternalPubKey.testnet).to.equal(p2trAddressTestnet);
+            expect(p2trAddressGeneratedInternalPubKey.regtest).to.equal(p2trAddressRegtest);
         });
 
         it('Throw when handling invalid address type', () => {

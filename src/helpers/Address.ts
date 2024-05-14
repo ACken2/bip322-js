@@ -169,7 +169,8 @@ class Address {
             case 'p2pkh':
                 return {
                     mainnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.regtest }).address
                 }
             case 'p2sh-p2wpkh':
                 // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/addresses.spec.ts#L70
@@ -181,19 +182,25 @@ class Address {
                     testnet: bitcoin.payments.p2sh({ 
                         redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }), 
                         network: bitcoin.networks.testnet 
+                    }).address,
+                    regtest: bitcoin.payments.p2sh({ 
+                        redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.regtest }), 
+                        network: bitcoin.networks.regtest 
                     }).address
                 }
             case 'p2wpkh':
                 return {
                     mainnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.regtest }).address
                 }
             case 'p2tr':
                 // Convert full-length public key into internal public key if necessary
                 const internalPubkey = Key.toXOnly(publicKey);
                 return {
                     mainnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.regtest }).address
                 }
             default:
                 throw new Error('Cannot convert public key into unsupported address type.');
