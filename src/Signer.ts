@@ -83,7 +83,7 @@ class Signer {
      */
     private static checkPubKeyCorrespondToAddress(publicKey: Buffer, claimedAddress: string) {
         // Derive the same address type from the provided public key
-        let derivedAddresses: { mainnet: string, testnet: string };
+        let derivedAddresses: { mainnet: string, testnet: string, regtest: string };
         if (Address.isP2PKH(claimedAddress)) {
             derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
         }
@@ -100,7 +100,10 @@ class Signer {
             throw new Error('Unable to sign BIP-322 message for unsupported address type.'); // Unsupported address type
         }
         // Check if the derived address correspond to the claimedAddress
-        return (derivedAddresses.mainnet === claimedAddress) || (derivedAddresses.testnet === claimedAddress);
+        return (
+            (derivedAddresses.mainnet === claimedAddress) || (derivedAddresses.testnet === claimedAddress) ||
+            (derivedAddresses.regtest === claimedAddress)
+        );
     }
 
 }
