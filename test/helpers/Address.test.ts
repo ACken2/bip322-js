@@ -2,6 +2,7 @@
 import { expect, use } from 'chai';
 import chaibytes from "chai-bytes";
 import ECPairFactory from 'ecpair';
+import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 
 // Import module to be tested
@@ -20,45 +21,60 @@ describe('Address Test', () => {
         const p2pkhMainnet = '17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem';
         const p2pkhTestnet = 'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn';
         const p2pkhTestnetII = 'n11112Lo13n4GvQhQpDtLY8KH7KNeCVmvw';
+        const p2pkhRegtest = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
         // P2SH
         const p2shMainnet = '3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX';
         const p2shTestnet = '2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc';
+        const p2shRegtest = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
         // P2WPKH
         const p2wpkhMainnet = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
         const p2wpkhTestnet = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
+        const p2wpkhRegtest = 'bcrt1q9vza2e8x573nczrlzms0wvx3gsqjx7vay85cr9';
         // P2WSH
         const p2wshMainnet = 'bc1qeklep85ntjz4605drds6aww9u0qr46qzrv5xswd35uhjuj8ahfcqgf6hak';
         const p2wshTestnet = 'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7';
+        const p2wshRegtest = 'bcrt1qruu5mtcgx8fpz58uquwjke6tte88uykrr06nhgu9eruv2j370lesyhj9au';
         // P2TR
         const p2trMainnet = 'bc1p000022222333333444444455555555666666666999999999zz9qzagays';
         const p2trTestnet = 'tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp';
+        const p2trRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
 
         it('Classify if a given address is a P2PKH address correctly', () => {
             // Act
             const p2pkhMainnetResult = Address.isP2PKH(p2pkhMainnet);
             const p2pkhTestnetResult = Address.isP2PKH(p2pkhTestnet);
             const p2pkhTestnetIIResult = Address.isP2PKH(p2pkhTestnetII);
+            const p2pkhRegtestResult = Address.isP2PKH(p2pkhRegtest);
             const p2shMainnetResult = Address.isP2PKH(p2shMainnet);
             const p2shTestnetResult = Address.isP2PKH(p2shTestnet);
+            const p2shRegtestResult = Address.isP2PKH(p2shRegtest);
             const p2wpkhMainnetResult = Address.isP2PKH(p2wpkhMainnet);
             const p2wpkhTestnetResult = Address.isP2PKH(p2wpkhTestnet);
+            const p2wpkhRegtestResult = Address.isP2PKH(p2wpkhRegtest);
             const p2wshMainnetResult = Address.isP2PKH(p2wshMainnet);
             const p2wshTestnetResult = Address.isP2PKH(p2wshTestnet);
+            const p2wshRegtestResult = Address.isP2PKH(p2wshRegtest);
             const p2trMainnetResult = Address.isP2PKH(p2trMainnet);
             const p2trTestnetResult = Address.isP2PKH(p2trTestnet);
+            const p2trRegtestResult = Address.isP2PKH(p2trRegtest);
 
             // Assert
             expect(p2pkhMainnetResult).to.be.true;
             expect(p2pkhTestnetResult).to.be.true;
             expect(p2pkhTestnetIIResult).to.be.true;
+            expect(p2pkhRegtestResult).to.be.true;
             expect(p2shMainnetResult).to.be.false;
             expect(p2shTestnetResult).to.be.false;
+            expect(p2shRegtestResult).to.be.false;
             expect(p2wpkhMainnetResult).to.be.false;
             expect(p2wpkhTestnetResult).to.be.false;
+            expect(p2wpkhRegtestResult).to.be.false;
             expect(p2wshMainnetResult).to.be.false;
             expect(p2wshTestnetResult).to.be.false;
+            expect(p2wshRegtestResult).to.be.false;
             expect(p2trMainnetResult).to.be.false;
             expect(p2trTestnetResult).to.be.false;
+            expect(p2trRegtestResult).to.be.false;
         });
 
         it('Classify if a given address is a P2SH address correctly', () => {
@@ -66,27 +82,37 @@ describe('Address Test', () => {
             const p2pkhMainnetResult = Address.isP2SH(p2pkhMainnet);
             const p2pkhTestnetResult = Address.isP2SH(p2pkhTestnet);
             const p2pkhTestnetIIResult = Address.isP2SH(p2pkhTestnetII);
+            const p2pkhRegtestResult = Address.isP2SH(p2pkhRegtest);
             const p2shMainnetResult = Address.isP2SH(p2shMainnet);
             const p2shTestnetResult = Address.isP2SH(p2shTestnet);
+            const p2shRegtestResult = Address.isP2SH(p2shRegtest);
             const p2wpkhMainnetResult = Address.isP2SH(p2wpkhMainnet);
             const p2wpkhTestnetResult = Address.isP2SH(p2wpkhTestnet);
+            const p2wpkhRegtestResult = Address.isP2SH(p2wpkhRegtest);
             const p2wshMainnetResult = Address.isP2SH(p2wshMainnet);
             const p2wshTestnetResult = Address.isP2SH(p2wshTestnet);
+            const p2wshRegtestResult = Address.isP2SH(p2wshRegtest);
             const p2trMainnetResult = Address.isP2SH(p2trMainnet);
             const p2trTestnetResult = Address.isP2SH(p2trTestnet);
+            const p2trRegtestResult = Address.isP2SH(p2trRegtest);
 
             // Assert
             expect(p2pkhMainnetResult).to.be.false;
             expect(p2pkhTestnetResult).to.be.false;
             expect(p2pkhTestnetIIResult).to.be.false;
+            expect(p2pkhRegtestResult).to.be.false;
             expect(p2shMainnetResult).to.be.true;
             expect(p2shTestnetResult).to.be.true;
+            expect(p2shRegtestResult).to.be.true;
             expect(p2wpkhMainnetResult).to.be.false;
             expect(p2wpkhTestnetResult).to.be.false;
+            expect(p2wpkhRegtestResult).to.be.false;
             expect(p2wshMainnetResult).to.be.false;
             expect(p2wshTestnetResult).to.be.false;
+            expect(p2wshRegtestResult).to.be.false;
             expect(p2trMainnetResult).to.be.false;
             expect(p2trTestnetResult).to.be.false;
+            expect(p2trRegtestResult).to.be.false;
         });
 
         it('Classify if a given address is a P2WPKH address correctly', () => {
@@ -94,27 +120,37 @@ describe('Address Test', () => {
             const p2pkhMainnetResult = Address.isP2WPKH(p2pkhMainnet);
             const p2pkhTestnetResult = Address.isP2WPKH(p2pkhTestnet);
             const p2pkhTestnetIIResult = Address.isP2WPKH(p2pkhTestnetII);
+            const p2pkhRegtestResult = Address.isP2WPKH(p2pkhRegtest);
             const p2shMainnetResult = Address.isP2WPKH(p2shMainnet);
             const p2shTestnetResult = Address.isP2WPKH(p2shTestnet);
+            const p2shRegtestResult = Address.isP2WPKH(p2shRegtest);
             const p2wpkhMainnetResult = Address.isP2WPKH(p2wpkhMainnet);
             const p2wpkhTestnetResult = Address.isP2WPKH(p2wpkhTestnet);
+            const p2wpkhRegtestResult = Address.isP2WPKH(p2wpkhRegtest);
             const p2wshMainnetResult = Address.isP2WPKH(p2wshMainnet);
             const p2wshTestnetResult = Address.isP2WPKH(p2wshTestnet);
+            const p2wshRegtestResult = Address.isP2WPKH(p2wshRegtest);
             const p2trMainnetResult = Address.isP2WPKH(p2trMainnet);
             const p2trTestnetResult = Address.isP2WPKH(p2trTestnet);
+            const p2trRegtestResult = Address.isP2WPKH(p2trRegtest);
 
             // Assert
             expect(p2pkhMainnetResult).to.be.false;
             expect(p2pkhTestnetResult).to.be.false;
             expect(p2pkhTestnetIIResult).to.be.false;
+            expect(p2pkhRegtestResult).to.be.false;
             expect(p2shMainnetResult).to.be.false;
             expect(p2shTestnetResult).to.be.false;
+            expect(p2shRegtestResult).to.be.false;
             expect(p2wpkhMainnetResult).to.be.true;
             expect(p2wpkhTestnetResult).to.be.true;
+            expect(p2wpkhRegtestResult).to.be.true;
             expect(p2wshMainnetResult).to.be.false;
             expect(p2wshTestnetResult).to.be.false;
+            expect(p2wshRegtestResult).to.be.false;
             expect(p2trMainnetResult).to.be.false;
             expect(p2trTestnetResult).to.be.false;
+            expect(p2trRegtestResult).to.be.false;
         });
 
         it('Classify if a given address is a P2TR address correctly', () => {
@@ -122,27 +158,37 @@ describe('Address Test', () => {
             const p2pkhMainnetResult = Address.isP2TR(p2pkhMainnet);
             const p2pkhTestnetResult = Address.isP2TR(p2pkhTestnet);
             const p2pkhTestnetIIResult = Address.isP2TR(p2pkhTestnetII);
+            const p2pkhRegtestResult = Address.isP2TR(p2pkhRegtest);
             const p2shMainnetResult = Address.isP2TR(p2shMainnet);
             const p2shTestnetResult = Address.isP2TR(p2shTestnet);
+            const p2shRegtestResult = Address.isP2TR(p2shRegtest);
             const p2wpkhMainnetResult = Address.isP2TR(p2wpkhMainnet);
             const p2wpkhTestnetResult = Address.isP2TR(p2wpkhTestnet);
+            const p2wpkhRegtestResult = Address.isP2TR(p2wpkhRegtest);
             const p2wshMainnetResult = Address.isP2TR(p2wshMainnet);
             const p2wshTestnetResult = Address.isP2TR(p2wshTestnet);
+            const p2wshRegtestResult = Address.isP2TR(p2wshRegtest);
             const p2trMainnetResult = Address.isP2TR(p2trMainnet);
             const p2trTestnetResult = Address.isP2TR(p2trTestnet);
+            const p2trRegtestResult = Address.isP2TR(p2trRegtest);
 
             // Assert
             expect(p2pkhMainnetResult).to.be.false;
             expect(p2pkhTestnetResult).to.be.false;
             expect(p2pkhTestnetIIResult).to.be.false;
+            expect(p2pkhRegtestResult).to.be.false;
             expect(p2shMainnetResult).to.be.false;
             expect(p2shTestnetResult).to.be.false;
+            expect(p2shRegtestResult).to.be.false;
             expect(p2wpkhMainnetResult).to.be.false;
             expect(p2wpkhTestnetResult).to.be.false;
+            expect(p2wpkhRegtestResult).to.be.false;
             expect(p2wshMainnetResult).to.be.false;
             expect(p2wshTestnetResult).to.be.false;
+            expect(p2wshRegtestResult).to.be.false;
             expect(p2trMainnetResult).to.be.true;
             expect(p2trTestnetResult).to.be.true;
+            expect(p2trRegtestResult).to.be.true;
         });
 
     });
@@ -201,7 +247,72 @@ describe('Address Test', () => {
 
     });
 
-    describe('Address to scriptPubKey Function', () => {
+    it('Detect network from bitcoin network', () => {
+        // Arrange
+        // P2PKH
+        const p2pkhMainnet = '17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem';
+        const p2pkhTestnet = 'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn';
+        const p2pkhTestnetII = 'n11112Lo13n4GvQhQpDtLY8KH7KNeCVmvw';
+        const p2pkhRegtest = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+        // P2SH
+        const p2shMainnet = '3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX';
+        const p2shTestnet = '2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc';
+        const p2shRegtest = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+        // P2WPKH
+        const p2wpkhMainnet = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
+        const p2wpkhTestnet = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
+        const p2wpkhRegtest = 'bcrt1q9vza2e8x573nczrlzms0wvx3gsqjx7vay85cr9';
+        // P2WSH
+        const p2wshMainnet = 'bc1qeklep85ntjz4605drds6aww9u0qr46qzrv5xswd35uhjuj8ahfcqgf6hak';
+        const p2wshTestnet = 'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7';
+        const p2wshRegtest = 'bcrt1qruu5mtcgx8fpz58uquwjke6tte88uykrr06nhgu9eruv2j370lesyhj9au';
+        // P2TR
+        const p2trMainnet = 'bc1p000022222333333444444455555555666666666999999999zz9qzagays';
+        const p2trTestnet = 'tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp';
+        const p2trRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
+        // Invalid address
+        const invalidAddress = 'bc1a000022222333333444444455555555666666666999999999zz9qzagays';
+
+        // Act
+        const p2pkhMainnetResult = Address.getNetworkFromAddess(p2pkhMainnet);
+        const p2pkhTestnetResult = Address.getNetworkFromAddess(p2pkhTestnet);
+        const p2pkhTestnetIIResult = Address.getNetworkFromAddess(p2pkhTestnetII);
+        const p2pkhRegtestResult = Address.getNetworkFromAddess(p2pkhRegtest);
+        const p2shMainnetResult = Address.getNetworkFromAddess(p2shMainnet);
+        const p2shTestnetResult = Address.getNetworkFromAddess(p2shTestnet);
+        const p2shRegtestResult = Address.getNetworkFromAddess(p2shRegtest);
+        const p2wpkhMainnetResult = Address.getNetworkFromAddess(p2wpkhMainnet);
+        const p2wpkhTestnetResult = Address.getNetworkFromAddess(p2wpkhTestnet);
+        const p2wpkhRegtestResult = Address.getNetworkFromAddess(p2wpkhRegtest);
+        const p2wshMainnetResult = Address.getNetworkFromAddess(p2wshMainnet);
+        const p2wshTestnetResult = Address.getNetworkFromAddess(p2wshTestnet);
+        const p2wshRegtestResult = Address.getNetworkFromAddess(p2wshRegtest);
+        const p2trMainnetResult = Address.getNetworkFromAddess(p2trMainnet);
+        const p2trTestnetResult = Address.getNetworkFromAddess(p2trTestnet);
+        const p2trRegtestResult = Address.getNetworkFromAddess(p2trRegtest);
+        const invalidAddressResult = Address.getNetworkFromAddess.bind(invalidAddress);
+
+        // Assert
+        expect(p2pkhMainnetResult).to.equal(bitcoin.networks.bitcoin);
+        expect(p2pkhTestnetResult).to.equal(bitcoin.networks.testnet);
+        expect(p2pkhTestnetIIResult).to.equal(bitcoin.networks.testnet);
+        expect(p2pkhRegtestResult).to.equal(bitcoin.networks.testnet); // Regtest P2PKH has identical format as testnet
+        expect(p2shMainnetResult).to.equal(bitcoin.networks.bitcoin);
+        expect(p2shTestnetResult).to.equal(bitcoin.networks.testnet);
+        expect(p2shRegtestResult).to.equal(bitcoin.networks.testnet); // Regtest P2SH has identical format as testnet
+        expect(p2wpkhMainnetResult).to.equal(bitcoin.networks.bitcoin);
+        expect(p2wpkhTestnetResult).to.equal(bitcoin.networks.testnet);
+        expect(p2wpkhRegtestResult).to.equal(bitcoin.networks.regtest);
+        expect(p2wshMainnetResult).to.equal(bitcoin.networks.bitcoin);
+        expect(p2wshTestnetResult).to.equal(bitcoin.networks.testnet);
+        expect(p2wshRegtestResult).to.equal(bitcoin.networks.regtest);
+        expect(p2trMainnetResult).to.equal(bitcoin.networks.bitcoin);
+        expect(p2trTestnetResult).to.equal(bitcoin.networks.testnet);
+        expect(p2trRegtestResult).to.equal(bitcoin.networks.regtest);
+        expect(invalidAddressResult).to.throws("Unknown address type");
+    });
+
+    describe('Address to scriptPubKey function', () => {
 
         // Arrange
         // P2PKH
@@ -211,93 +322,128 @@ describe('Address Test', () => {
         const p2pkhTestnetScriptPubKey = Buffer.from('76a914243f1394f44554f4ce3fd68649c19adc483ce92488ac', 'hex');
         const p2pkhTestnetII = 'n11112Lo13n4GvQhQpDtLY8KH7KNeCVmvw';
         const p2pkhTestnetIIScriptPubKey = Buffer.from('76a914d5b84bc628a0a9fd15a411480198d5a31d1e5c0b88ac', 'hex');
+        const p2pkhRegtest = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+        const p2pkhRegtestScriptPubKey = Buffer.from('76a9142b05d564e6a7a33c087f16e0f730d1440123799d88ac', 'hex');
         // P2SH
         const p2shMainnet = '3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX';
         const p2shMainnetScriptPubKey = Buffer.from('a9148f55563b9a19f321c211e9b9f38cdf686ea0784587', 'hex');
         const p2shTestnet = '2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc';
         const p2shTestnetScriptPubKey = Buffer.from('a9144e9f39ca4688ff102128ea4ccda34105324305b087', 'hex');
+        const p2shRegtest = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+        const p2shRegtestScriptPubKey = Buffer.from('a9144382bc8115ce44d91b3de0d21836c6f1ecc4f85187', 'hex');
         // P2WPKH
         const p2wpkhMainnet = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
         const p2wpkhMainnetScriptPubKey = Buffer.from('0014751e76e8199196d454941c45d1b3a323f1433bd6', 'hex');
         const p2wpkhTestnet = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
         const p2wpkhTestnetScriptPubKey = Buffer.from('0014751e76e8199196d454941c45d1b3a323f1433bd6', 'hex');
+        const p2wpkhRegtest = 'bcrt1q9vza2e8x573nczrlzms0wvx3gsqjx7vay85cr9';
+        const p2wpkhRegtestScriptPubKey = Buffer.from('00142b05d564e6a7a33c087f16e0f730d1440123799d', 'hex');
         // P2WSH
         const p2wshMainnet = 'bc1qeklep85ntjz4605drds6aww9u0qr46qzrv5xswd35uhjuj8ahfcqgf6hak';
         const p2wshMainnetScriptPubKey = Buffer.from('0020cdbf909e935c855d3e8d1b61aeb9c5e3c03ae8021b286839b1a72f2e48fdba70', 'hex');
         const p2wshTestnet = 'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7';
         const p2wshTestnetScriptPubKey = Buffer.from('00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262', 'hex');
+        const p2wshRegtest = 'bcrt1qruu5mtcgx8fpz58uquwjke6tte88uykrr06nhgu9eruv2j370lesyhj9au';
+        const p2wshRegtestScriptPubKey = Buffer.from('00201f394daf0831d21150fc071d2b674b5e4e7e12c31bf53ba385c8f8c54a3e7ff3', 'hex');
         // P2TR
         const p2trMainnet = 'bc1p000022222333333444444455555555666666666999999999zz9qzagays';
         const p2trMainnetScriptPubKey = Buffer.from('51207bdef5294a546318c635ad6b5ad694a5294a535ad6b5ad6b45294a5294a5108a', 'hex');
         const p2trTestnet = 'tb1p000273lqsqqfw2a6h2vqxr2tll4wgtv7zu8a30rz4mhree8q5jzq8cjtyp';
         const p2trTestnetScriptPubKey = Buffer.from('51207bdeaf47e08000972bbaba98030d4bffeae42d9e170fd8bc62aeee3ce4e0a484', 'hex');
+        const p2trRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
+        const p2trRegtestScriptPubKey = Buffer.from('51200b34f2cc6f60d54e3fdc2d1dd053fcc393bd2db9acc8de4a7c3cc28a83d4d8e9', 'hex');
 
         it('Convert valid Bitcoin address into correct scriptPubKey', () => {
             // Act
             const p2pkhMainnetConverted = Address.convertAdressToScriptPubkey(p2pkhMainnet);
             const p2pkhTestnetConverted = Address.convertAdressToScriptPubkey(p2pkhTestnet);
             const p2pkhTestnetIIConverted = Address.convertAdressToScriptPubkey(p2pkhTestnetII);
+            const p2pkhRegtestConverted = Address.convertAdressToScriptPubkey(p2pkhRegtest);
             const p2shMainnetConverted = Address.convertAdressToScriptPubkey(p2shMainnet);
             const p2shTestnetConverted = Address.convertAdressToScriptPubkey(p2shTestnet);
+            const p2shRegtestConverted = Address.convertAdressToScriptPubkey(p2shRegtest);
             const p2wpkhMainnetConverted = Address.convertAdressToScriptPubkey(p2wpkhMainnet);
             const p2wpkhTestnetConverted = Address.convertAdressToScriptPubkey(p2wpkhTestnet);
+            const p2wpkhRegtestConverted = Address.convertAdressToScriptPubkey(p2wpkhRegtest);
             const p2wshMainnetConverted = Address.convertAdressToScriptPubkey(p2wshMainnet);
             const p2wshTestnetConverted = Address.convertAdressToScriptPubkey(p2wshTestnet);
+            const p2wshRegtestConverted = Address.convertAdressToScriptPubkey(p2wshRegtest);
             const p2trMainnetConverted = Address.convertAdressToScriptPubkey(p2trMainnet);
             const p2trTestnetConverted = Address.convertAdressToScriptPubkey(p2trTestnet);
+            const p2trRegtestConverted = Address.convertAdressToScriptPubkey(p2trRegtest);
 
             // Assert
             expect(p2pkhMainnetConverted).to.equalBytes(p2pkhMainnetScriptPubKey);
             expect(p2pkhTestnetConverted).to.equalBytes(p2pkhTestnetScriptPubKey);
             expect(p2pkhTestnetIIConverted).to.equalBytes(p2pkhTestnetIIScriptPubKey);
+            expect(p2pkhRegtestConverted).to.equalBytes(p2pkhRegtestScriptPubKey);
             expect(p2shMainnetConverted).to.equalBytes(p2shMainnetScriptPubKey);
             expect(p2shTestnetConverted).to.equalBytes(p2shTestnetScriptPubKey);
+            expect(p2shRegtestConverted).to.equalBytes(p2shRegtestScriptPubKey);
             expect(p2wpkhMainnetConverted).to.equalBytes(p2wpkhMainnetScriptPubKey);
             expect(p2wpkhTestnetConverted).to.equalBytes(p2wpkhTestnetScriptPubKey);
+            expect(p2wpkhRegtestConverted).to.equalBytes(p2wpkhRegtestScriptPubKey);
             expect(p2wshMainnetConverted).to.equalBytes(p2wshMainnetScriptPubKey);
             expect(p2wshTestnetConverted).to.equalBytes(p2wshTestnetScriptPubKey);
+            expect(p2wshRegtestConverted).to.equalBytes(p2wshRegtestScriptPubKey);
             expect(p2trMainnetConverted).to.equalBytes(p2trMainnetScriptPubKey);
             expect(p2trTestnetConverted).to.equalBytes(p2trTestnetScriptPubKey);
+            expect(p2trRegtestConverted).to.equalBytes(p2trRegtestScriptPubKey);
         });
 
         it('Throw when handling invalid address', () => {
             // Arrange
             const p2pkhMainnetMalformed = p2pkhMainnet + 'm';
             const p2pkhTestnetMalformed = p2pkhTestnet + 'm';
+            const p2pkhRegtestMalformed = p2pkhRegtest + 'm';
             const p2shMainnetMalformed = p2shMainnet + 'm';
             const p2shTestnetMalformed = p2shTestnet + 'm';
+            const p2shRegtestMalformed = p2shRegtest + 'm';
             const p2wpkhMainnetMalformed = p2wpkhMainnet + 'm';
             const p2wpkhTestnetMalformed = p2wpkhTestnet + 'm';
+            const p2wpkhRegtestMalformed = p2wpkhRegtest + 'm';
             const p2wshMainnetMalformed = p2wshMainnet + 'm';
             const p2wshTestnetMalformed = p2wshTestnet + 'm';
+            const p2wshRegtestMalformed = p2wshRegtest + 'm';
             const p2trMainnetMalformed = p2trMainnet + 'm';
             const p2trTestnetMalformed = p2trTestnet + 'm';
+            const p2trRegtestMalformed = p2trRegtest + 'm';
             const p2wtfMalformed = 'bc1wtfpv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
 
             // Act
             const p2pkhMainnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2pkhMainnetMalformed);
             const p2pkhTestnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2pkhTestnetMalformed);
+            const p2pkhRegtestMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2pkhRegtestMalformed);
             const p2shMainnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2shMainnetMalformed);
             const p2shTestnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2shTestnetMalformed);
+            const p2shRegtestMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2shRegtestMalformed);
             const p2wpkhMainnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wpkhMainnetMalformed);
             const p2wpkhTestnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wpkhTestnetMalformed);
+            const p2wpkhRegtestMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wpkhRegtestMalformed);
             const p2wshMainnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wshMainnetMalformed);
             const p2wshTestnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wshTestnetMalformed);
+            const p2wshRegtestMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wshRegtestMalformed);
             const p2trMainnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2trMainnetMalformed);
             const p2trTestnetMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2trTestnetMalformed);
+            const p2trRegtestMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2trRegtestMalformed);
             const p2wtfMalformedResult = Address.convertAdressToScriptPubkey.bind(Address, p2wtfMalformed);
 
             // Assert
             expect(p2pkhMainnetMalformedResult).to.throw(); // Throw by bitcoinjs-message library
             expect(p2pkhTestnetMalformedResult).to.throw(); // Throw by bitcoinjs-message library
+            expect(p2pkhRegtestMalformedResult).to.throw(); // Throw by bitcoinjs-message library
             expect(p2shMainnetMalformedResult).to.throw(); // Throw by bitcoinjs-message library
             expect(p2shTestnetMalformedResult).to.throw(); // Throw by bitcoinjs-message library
+            expect(p2shRegtestMalformedResult).to.throw(); // Throw by bitcoinjs-message library
             expect(p2wpkhMainnetMalformedResult).to.throws('Unknown address type');
             expect(p2wpkhTestnetMalformedResult).to.throws('Unknown address type');
+            expect(p2wpkhRegtestMalformedResult).to.throws('Unknown address type');
             expect(p2wshMainnetMalformedResult).to.throws('Unknown address type');
             expect(p2wshTestnetMalformedResult).to.throws('Unknown address type');
+            expect(p2wshRegtestMalformedResult).to.throws('Unknown address type');
             expect(p2trMainnetMalformedResult).to.throws('Unknown address type');
             expect(p2trTestnetMalformedResult).to.throws('Unknown address type');
+            expect(p2trRegtestMalformedResult).to.throws('Unknown address type');
             expect(p2wtfMalformedResult).to.throws('Unknown address type');
         });
 
@@ -315,12 +461,16 @@ describe('Address Test', () => {
             // Expected address for the private key L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k
             const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
             const p2pkhAddressTestnet = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
+            const p2pkhAddressRegtest = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
             const p2shAddress = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb';
             const p2shAddressTestnet = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
+            const p2shAddressRegtest = '2MyQBsrfRnTLwEdpjVVYNWHDB8LXLJUcub9';
             const p2wpkhAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l';
             const p2wpkhAddressTestnet = 'tb1q9vza2e8x573nczrlzms0wvx3gsqjx7vaxwd45v';
+            const p2wpkhAddressRegtest = 'bcrt1q9vza2e8x573nczrlzms0wvx3gsqjx7vay85cr9';
             const p2trAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3';
             const p2trAddressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
+            const p2trAddressRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
 
             // Act
             const p2pkhAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
@@ -332,14 +482,19 @@ describe('Address Test', () => {
             // Assert
             expect(p2pkhAddressGenerated.mainnet).to.equal(p2pkhAddress);
             expect(p2pkhAddressGenerated.testnet).to.equal(p2pkhAddressTestnet);
+            expect(p2pkhAddressGenerated.regtest).to.equal(p2pkhAddressRegtest);
             expect(p2shAddressGenerated.mainnet).to.equal(p2shAddress);
             expect(p2shAddressGenerated.testnet).to.equal(p2shAddressTestnet);
+            expect(p2shAddressGenerated.regtest).to.equal(p2shAddressRegtest);
             expect(p2wpkhAddressGenerated.mainnet).to.equal(p2wpkhAddress);
             expect(p2wpkhAddressGenerated.testnet).to.equal(p2wpkhAddressTestnet);
+            expect(p2wpkhAddressGenerated.regtest).to.equal(p2wpkhAddressRegtest);
             expect(p2trAddressGenerated.mainnet).to.equal(p2trAddress);
             expect(p2trAddressGenerated.testnet).to.equal(p2trAddressTestnet);
+            expect(p2trAddressGenerated.regtest).to.equal(p2trAddressRegtest);
             expect(p2trAddressGeneratedInternalPubKey.mainnet).to.equal(p2trAddress);
             expect(p2trAddressGeneratedInternalPubKey.testnet).to.equal(p2trAddressTestnet);
+            expect(p2trAddressGeneratedInternalPubKey.regtest).to.equal(p2trAddressRegtest);
         });
 
         it('Throw when handling invalid address type', () => {
@@ -418,54 +573,6 @@ describe('Address Test', () => {
             expect(Address.isValidBitcoinAddress(invalidAddressRegtest)).to.be.false;
         });
       
-    });
-
-    describe('Public Key Cmpression Function', function() {
-
-        it('Compress a uncompressed public key', function() {
-            // Arrange
-            const uncompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700e', 'hex');
-            const compressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
-            // Act
-            const compressed = Address.compressPublicKey(uncompressedPublicKey);
-            // Assert
-            expect(compressed).to.deep.equal(compressedPublicKey);
-        });
-
-        it('Throw with invalid uncompressed public key', function() {
-            // Arrange
-            const notUncompressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
-            const notUncompressedPublicKeyAsWell = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700f', 'hex');
-            // Act
-            const compressAttempt = Address.compressPublicKey.bind(notUncompressedPublicKey);
-            const compressAttemptTwo = Address.compressPublicKey.bind(notUncompressedPublicKeyAsWell);
-            // Assert
-            expect(compressAttempt).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
-            expect(compressAttemptTwo).to.throws('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
-        });
-
-        it('Uncompress a compressed public key', function() {
-            // Arrange
-            const uncompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700e', 'hex');
-            const compressedPublicKey = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f', 'hex');
-            // Act
-            const uncompressed = Address.uncompressPublicKey(compressedPublicKey);
-            // Assert
-            expect(uncompressed).to.deep.equal(uncompressedPublicKey);
-        });
-
-        it('Throw with invalid compressed public key', function() {
-            // Arrange
-            const notCompressedPublicKey = Buffer.from('044bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599f04edf9e6ea7e0796a176fba3957560f307e4c49cb2a46b4969e710f5933e700f', 'hex');
-            const notCompressedPublicKeyAsWell = Buffer.from('024bc3c1746b7f526b560517a61f2fad554c24d6a457503e4ec7e69f817f68599e', 'hex');
-            // Act
-            const uncompressAttempt = Address.uncompressPublicKey.bind(notCompressedPublicKey);
-            const uncompressAttemptTwo = Address.uncompressPublicKey.bind(notCompressedPublicKeyAsWell);
-            // Assert
-            expect(uncompressAttempt).to.throws('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
-            expect(uncompressAttemptTwo).to.throws('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
-        });
-
     });
 
 });

@@ -1,7 +1,7 @@
 // Import dependencies
 import BIP322 from "./BIP322";
 import ECPairFactory from 'ecpair';
-import { Address } from "./helpers";
+import { Address, Key } from "./helpers";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import * as bitcoinMessage from 'bitcoinjs-message';
@@ -14,16 +14,17 @@ class Signer {
 
     /**
      * Sign a BIP-322 signature from P2WPKH, P2SH-P2WPKH, and single-key-spend P2TR address and its corresponding private key.
+     * Network is automatically inferred from the given address.
+     * 
      * @param privateKey Private key used to sign the message
      * @param address Address to be signing the message
      * @param message message_challenge to be signed by the address 
-     * @param network Network that the address is located, defaults to the Bitcoin mainnet
      * @returns BIP-322 simple signature, encoded in base-64
      */
-    public static sign(privateKey: string, address: string, message: string, network: bitcoin.Network = bitcoin.networks.bitcoin) {
+    public static sign(privateKey: string, address: string, message: string) {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
-        let signer = ECPair.fromWIF(privateKey, network);
+        let signer = ECPair.fromWIF(privateKey, [bitcoin.networks.bitcoin, bitcoin.networks.testnet, bitcoin.networks.regtest]);
         // Check if the private key can sign message for the given address
         if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address)) {
             throw new Error(`Invalid private key provided for signing message for ${address}.`);
@@ -45,7 +46,7 @@ class Signer {
             // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
             const redeemScript = bitcoin.payments.p2wpkh({
                 hash: bitcoin.crypto.hash160(signer.publicKey),
-                network: network
+                network: Address.getNetworkFromAddess(address)
             }).output as Buffer;
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
@@ -56,11 +57,11 @@ class Signer {
         else {
             // P2TR signing path
             // Extract the taproot internal public key
-            const internalPublicKey = signer.publicKey.subarray(1, 33);
+            const internalPublicKey = Key.toXOnly(signer.publicKey);
             // Tweak the private key for signing, since the output and address uses tweaked key
             // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
             signer = signer.tweak(
-                bitcoin.crypto.taggedHash('TapTweak', signer.publicKey.subarray(1, 33))
+                bitcoin.crypto.taggedHash('TapTweak', internalPublicKey)
             );
             // Draft a toSign transaction that spends toSpend transaction
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), scriptPubKey, false, internalPublicKey);
@@ -83,7 +84,7 @@ class Signer {
      */
     private static checkPubKeyCorrespondToAddress(publicKey: Buffer, claimedAddress: string) {
         // Derive the same address type from the provided public key
-        let derivedAddresses: { mainnet: string, testnet: string };
+        let derivedAddresses: { mainnet: string, testnet: string, regtest: string };
         if (Address.isP2PKH(claimedAddress)) {
             derivedAddresses = Address.convertPubKeyIntoAddress(publicKey, 'p2pkh');
         }
@@ -100,7 +101,10 @@ class Signer {
             throw new Error('Unable to sign BIP-322 message for unsupported address type.'); // Unsupported address type
         }
         // Check if the derived address correspond to the claimedAddress
-        return (derivedAddresses.mainnet === claimedAddress) || (derivedAddresses.testnet === claimedAddress);
+        return (
+            (derivedAddresses.mainnet === claimedAddress) || (derivedAddresses.testnet === claimedAddress) ||
+            (derivedAddresses.regtest === claimedAddress)
+        );
     }
 
 }

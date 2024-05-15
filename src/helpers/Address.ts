@@ -1,5 +1,5 @@
 // Import dependency
-import { ec as EC } from 'elliptic';
+import Key from "./Key";
 import * as bitcoin from 'bitcoinjs-lib';
 
 /**
@@ -44,7 +44,7 @@ class Address {
      */
     public static isP2WPKH(address: string) {
         // Check if the provided address is a P2WPKH/P2WSH address
-        if (address.slice(0, 4) === 'bc1q' || address.slice(0, 4) === 'tb1q') {
+        if (/^(bc1q|tb1q|bcrt1q)/.test(address)) {
             // Either a P2WPKH / P2WSH address
             // Convert the address into a scriptPubKey
             const scriptPubKey = this.convertAdressToScriptPubkey(address);
@@ -67,7 +67,7 @@ class Address {
      * @returns True if the provided address is a taproot address, false if otherwise
      */
     public static isP2TR(address: string) {
-        if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
+        if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
             return true; // P2TR address
         }
         else {
@@ -108,6 +108,29 @@ class Address {
     }
 
     /**
+     * Determine network type by checking addresses prefixes
+     * Reference: https://en.bitcoin.it/wiki/List_of_address_prefixes
+     * 
+     * Adopted from https://github.com/ACken2/bip322-js/pull/6 by Czino
+     * 
+     * @param address Bitcoin address
+     * @returns Network type
+     * @throws If the address type is not recognized
+     */
+    public static getNetworkFromAddess(address: string) {
+        if (/^(bc1q|bc1p|1|3)/.test(address)) {
+            return bitcoin.networks.bitcoin;
+        }
+        else if (/^(tb1q|tb1p|2|m|n)/.test(address)) {
+            return bitcoin.networks.testnet;
+        }
+        else if (/^(bcrt1q|bcrt1p)/.test(address)) {
+            return bitcoin.networks.regtest;
+        }
+        throw new Error("Unknown address type")
+    }
+
+    /**
      * Convert a given Bitcoin address into its corresponding script public key.
      * Reference: https://github.com/buidl-bitcoin/buidl-python/blob/d79e9808e8ca60975d315be41293cb40d968626d/buidl/script.py#L607
      * @param address Bitcoin address
@@ -119,39 +142,39 @@ class Address {
             // P2PKH address
             return bitcoin.payments.p2pkh({
                 address: address,
-                network: (address[0] === '1') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
+                network: this.getNetworkFromAddess(address)
             }).output as Buffer;
         }
         else if (address[0] === '3' || address[0] === '2') {
             // P2SH address
             return bitcoin.payments.p2sh({
                 address: address,
-                network: (address[0] === '3') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
+                network: this.getNetworkFromAddess(address)
             }).output as Buffer;
         }
-        else if (address.slice(0, 4) === 'bc1q' || address.slice(0, 4) === 'tb1q') {
+        else if (/^(bc1q|tb1q|bcrt1q)/.test(address)) {
             // P2WPKH or P2WSH address
-            if (address.length === 42) {
+            if (address.length === 42 || (address.includes('bcrt1q') && address.length === 44)) {
                 // P2WPKH address
                 return bitcoin.payments.p2wpkh({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1q') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
+                    network: this.getNetworkFromAddess(address)
                 }).output as Buffer;
             }
-            else if (address.length === 62) {
+            else if (address.length === 62 || (address.includes('bcrt1q') && address.length === 64)) {
                 // P2WSH address
                 return bitcoin.payments.p2wsh({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1q') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
+                    network: this.getNetworkFromAddess(address)
                 }).output as Buffer;
             }
         }
-        else if (address.slice(0, 4) === 'bc1p' || address.slice(0, 4) === 'tb1p') {
-            if (address.length === 62) {
+        else if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
+            if (address.length === 62 || (address.includes('bcrt1p') && address.length === 64)) {
                 // P2TR address
                 return bitcoin.payments.p2tr({
                     address: address,
-                    network: (address.slice(0, 4) === 'bc1p') ? bitcoin.networks.bitcoin : bitcoin.networks.testnet
+                    network: this.getNetworkFromAddess(address)
                 }).output as Buffer;
             }
         }
@@ -169,7 +192,8 @@ class Address {
             case 'p2pkh':
                 return {
                     mainnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2pkh({ pubkey: publicKey, network: bitcoin.networks.regtest }).address
                 }
             case 'p2sh-p2wpkh':
                 // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/addresses.spec.ts#L70
@@ -181,19 +205,25 @@ class Address {
                     testnet: bitcoin.payments.p2sh({ 
                         redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }), 
                         network: bitcoin.networks.testnet 
+                    }).address,
+                    regtest: bitcoin.payments.p2sh({ 
+                        redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.regtest }), 
+                        network: bitcoin.networks.regtest 
                     }).address
                 }
             case 'p2wpkh':
                 return {
                     mainnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2wpkh({ pubkey: publicKey, network: bitcoin.networks.regtest }).address
                 }
             case 'p2tr':
                 // Convert full-length public key into internal public key if necessary
-                const internalPubkey = publicKey.byteLength === 33 ? publicKey.subarray(1, 33) : publicKey;
+                const internalPubkey = Key.toXOnly(publicKey);
                 return {
                     mainnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.bitcoin }).address,
-                    testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address
+                    testnet: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.testnet }).address,
+                    regtest: bitcoin.payments.p2tr({ internalPubkey: internalPubkey, network: bitcoin.networks.regtest }).address
                 }
             default:
                 throw new Error('Cannot convert public key into unsupported address type.');
@@ -242,77 +272,6 @@ class Address {
         }
         catch (error) { }
         return false; // Probably not a valid address
-    }
-
-    /**
-     * Compresses an uncompressed public key using the elliptic curve secp256k1.
-     * This method takes a public key in its uncompressed form and returns a compressed
-     * representation of the public key. Elliptic curve public keys can be represented in 
-     * a shorter form known as compressed format which saves space and still retains the 
-     * full public key's capabilities. The method uses the elliptic library to convert the
-     * uncompressed public key into its compressed form.
-     * 
-     * The steps involved in the process are:
-     * 1. Initialize a new elliptic curve instance for the secp256k1 curve.
-     * 2. Create a key pair object from the uncompressed public key buffer.
-     * 3. Extract the compressed public key from the key pair object.
-     * 4. Return the compressed public key as a Buffer object.
-     * 
-     * @param uncompressedPublicKey A Buffer containing the uncompressed public key.
-     * @return Buffer Returns a Buffer containing the compressed public key.
-     * @throws Error Throws an error if the provided public key cannot be compressed,
-     *         typically indicating that the key is not valid.
-     */
-    public static compressPublicKey(uncompressedPublicKey: Buffer): Buffer {
-        // Initialize elliptic curve
-        const ec = new EC('secp256k1');
-        // Try to compress the provided public key
-        try {
-            // Create a key pair from the uncompressed public key buffer
-            const keyPair = ec.keyFromPublic(Buffer.from(uncompressedPublicKey));
-            // Get the compressed public key as a Buffer
-            const compressedPublicKey = Buffer.from(keyPair.getPublic(true, 'array'));
-            return compressedPublicKey;
-        }
-        catch (err) {
-            throw new Error('Fails to compress the provided public key. Please check if the provided key is a valid uncompressed public key.');
-        }
-    }
-
-    /**
-     * Uncompresses a given public key using the elliptic curve secp256k1.
-     * This method accepts a compressed public key and attempts to convert it into its
-     * uncompressed form. Public keys are often compressed to save space, but certain
-     * operations require the full uncompressed key. This method uses the elliptic
-     * library to perform the conversion.
-     *
-     * The function operates as follows:
-     * 1. Initialize a new elliptic curve instance using secp256k1.
-     * 2. Attempt to create a key pair from the compressed public key buffer.
-     * 3. Extract the uncompressed public key from the key pair object.
-     * 4. Return the uncompressed public key as a Buffer object.
-     * If the compressed public key provided is invalid and cannot be uncompressed, 
-     * the method will throw an error with a descriptive message.
-     * 
-     * @param compressedPublicKey A Buffer containing the compressed public key.
-     * @return Buffer The uncompressed public key as a Buffer.
-     * @throws Error Throws an error if the provided public key cannot be uncompressed,
-     *         typically indicating that the key is not valid.
-     */
-    public static uncompressPublicKey(compressedPublicKey: Buffer): Buffer {
-        // Initialize elliptic curve
-        const ec = new EC('secp256k1');
-        // Try to uncompress the provided public key
-        try {
-            // Create a key pair from the compressed public key buffer
-            const keyPair = ec.keyFromPublic(Buffer.from(compressedPublicKey));
-            // Get the compressed public key as a Buffer
-            const uncompressedPublicKey = Buffer.from(keyPair.getPublic(false, 'array'));
-            return uncompressedPublicKey;
-        }
-        catch (err) {
-            throw new Error('Fails to uncompress the provided public key. Please check if the provided key is a valid compressed public key.');
-        }
     }
 
 }
