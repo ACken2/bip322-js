@@ -151,8 +151,10 @@ class Verifier {
             const p2pkhAddressDerivedCompressed = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2pkh');
             // Assert that the derived address is identical to the claimed signing address
             if (
-                p2pkhAddressDerivedUncompressed.mainnet !== signerAddress && p2pkhAddressDerivedUncompressed.testnet !== signerAddress &&
-                p2pkhAddressDerivedCompressed.mainnet !== signerAddress && p2pkhAddressDerivedCompressed.testnet !== signerAddress
+                p2pkhAddressDerivedUncompressed.mainnet !== signerAddress && p2pkhAddressDerivedUncompressed.testnet !== signerAddress && 
+                p2pkhAddressDerivedUncompressed.regtest !== signerAddress &&
+                p2pkhAddressDerivedCompressed.mainnet !== signerAddress && p2pkhAddressDerivedCompressed.testnet !== signerAddress &&
+                p2pkhAddressDerivedCompressed.regtest !== signerAddress
             ) {
                 return false; // Derived address did not match with the claimed signing address
             }
@@ -161,7 +163,10 @@ class Verifier {
             // Assume it is a P2SH-P2WPKH address, derive a P2SH-P2WPKH address based on the public key recovered
             const p2shAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2sh-p2wpkh');
             // Assert that the derived address is identical to the claimed signing address
-            if (p2shAddressDerived.mainnet !== signerAddress && p2shAddressDerived.testnet !== signerAddress) {
+            if (
+                p2shAddressDerived.mainnet !== signerAddress && p2shAddressDerived.testnet !== signerAddress &&
+                p2shAddressDerived.regtest !== signerAddress
+            ) {
                 return false; // Derived address did not match with the claimed signing address
             }
         }
@@ -169,7 +174,10 @@ class Verifier {
             // Assume it is a P2WPKH address, derive a P2WPKH address based on the public key recovered
             const p2wpkhAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2wpkh');
             // Assert that the derived address is identical to the claimed signing address
-            if (p2wpkhAddressDerived.mainnet !== signerAddress && p2wpkhAddressDerived.testnet !== signerAddress) {
+            if (
+                p2wpkhAddressDerived.mainnet !== signerAddress && p2wpkhAddressDerived.testnet !== signerAddress &&
+                p2wpkhAddressDerived.regtest !== signerAddress
+            ) {
                 return false; // Derived address did not match with the claimed signing address
             }
         }
@@ -177,7 +185,10 @@ class Verifier {
             // Assume it is a P2TR address, derive a P2TR address based on the public key recovered
             const p2trAddressDerived = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2tr');
             // Assert that the derived address is identical to the claimed signing address
-            if (p2trAddressDerived.mainnet !== signerAddress && p2trAddressDerived.testnet !== signerAddress) {
+            if (
+                p2trAddressDerived.mainnet !== signerAddress && p2trAddressDerived.testnet !== signerAddress &&
+                p2trAddressDerived.regtest !== signerAddress
+            ) {
                 return false; // Derived address did not match with the claimed signing address
             }
         }
