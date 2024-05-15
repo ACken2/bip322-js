@@ -17,10 +17,11 @@ class Verifier {
      * @param signerAddress Address of the signing address
      * @param message message_challenge signed by the address 
      * @param signatureBase64 Signature produced by the signing address
+     * @param useStrictVerification If true, apply strict BIP-137 verification and enforce address flag verification; otherwise, address flag is ignored during verification
      * @returns True if the provided signature is a valid BIP-322 signature for the given message and address, false if otherwise
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
-    public static verifySignature(signerAddress: string, message: string, signatureBase64: string) {
+    public static verifySignature(signerAddress: string, message: string, signatureBase64: string, useStrictVerification: boolean = false) {
         // Check whether the given signerAddress is valid
         if (!Address.isValidBitcoinAddress(signerAddress)) {
             throw new Error("Invalid Bitcoin address is provided.");
@@ -28,7 +29,7 @@ class Verifier {
         // Handle legacy BIP-137 signature
         // For P2PKH address, assume the signature is also a legacy signature
         if (Address.isP2PKH(signerAddress) || BIP137.isBIP137Signature(signatureBase64)) {
-            return this.verifyBIP137Signature(signerAddress, message, signatureBase64);
+            return this.verifyBIP137Signature(signerAddress, message, signatureBase64, useStrictVerification);
         }
         // Convert address into corresponding script pubkey
         const scriptPubKey = Address.convertAdressToScriptPubkey(signerAddress);
@@ -121,10 +122,14 @@ class Verifier {
      * @param signerAddress Address of the signing address
      * @param message message_challenge signed by the address 
      * @param signatureBase64 Signature produced by the signing address
+     * @param useStrictVerification If true, apply strict BIP-137 verification and enforce address flag verification; otherwise, address flag is ignored during verification
      * @returns True if the provided signature is a valid BIP-137 signature for the given message and address, false if otherwise
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
-    private static verifyBIP137Signature(signerAddress: string, message: string, signatureBase64: string) {
+    private static verifyBIP137Signature(signerAddress: string, message: string, signatureBase64: string, useStrictVerification: boolean) {
+        if (useStrictVerification) {
+            return this.bitcoinMessageVerifyWrap(message, signerAddress, signatureBase64);
+        }
         // Recover the public key associated with the signature
         const publicKeySignedRaw = BIP137.derivePubKey(message, signatureBase64);
         // Compress and uncompress the public key if necessary

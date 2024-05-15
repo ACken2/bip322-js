@@ -584,4 +584,65 @@ describe('Verifier Test', () => {
         expect(Verifier.verifySignature(address, message, signature)).to.be.true;
     });
 
+    it('Support strict BIP-137 verification', () => {
+        // Arrange
+        const p2pkhMainnetUncompressAddress = '1FJCj41mm1LaXqV8228aBCN4JwN8ndWUAV';
+        const p2pkhTestnetUncompressAddress = 'mupA276ka2mqJwxjjb6x17aPAvxqjKLmqE';
+        const p2pkhRegtestUncompressAddress = 'mupA276ka2mqJwxjjb6x17aPAvxqjKLmqE';
+        const p2pkhMainnetAddress = '1LepW4qZiwBPLe7SHBNwfAfuNNyGbnsV7S';
+        const p2pkhTestnetAddress = 'n1Amo7vYXxce7kb3zkMKV5tEENZyYtqc7W';
+        const p2pkhRegtestAddress = 'n1Amo7vYXxce7kb3zkMKV5tEENZyYtqc7W';
+        const p2shMainnetAddress = '3Agx7m86mJgVbLZP3Wk1qjYkzv6gGemz9X';
+        const p2shTestnetAddress = '2N2FABW48NmBqo8BvieMtTgY2DGJr57GSJV';
+        const p2shRegtestAddress = '2N2FABW48NmBqo8BvieMtTgY2DGJr57GSJV';
+        const p2wpkhMainnetAddress = 'bc1q67gkavl5yjmu468qa80zt54cv9x0lz8xr6pu63';
+        const p2wpkhTestnetAddress = 'tb1q67gkavl5yjmu468qa80zt54cv9x0lz8xfu60pz';
+        const p2wpkhRegtestAddress = 'bcrt1q67gkavl5yjmu468qa80zt54cv9x0lz8xt4rzkt';
+        const p2trMainnetAddress = 'bc1p0kw496l42wu4vkm75s3ergthhkk4y4y4sr06may29rvkuhjd2zkqf44nxt';
+        const p2trTestnetAddress = 'tb1p0kw496l42wu4vkm75s3ergthhkk4y4y4sr06may29rvkuhjd2zkq7aruuy';
+        const p2trRegtestAddress = 'bcrt1p0kw496l42wu4vkm75s3ergthhkk4y4y4sr06may29rvkuhjd2zkqnyf6f7';
+        const addresses = [
+            p2pkhMainnetUncompressAddress, p2pkhTestnetUncompressAddress, p2pkhRegtestUncompressAddress,
+            p2pkhMainnetAddress, p2pkhTestnetAddress, p2pkhRegtestAddress,
+            p2shMainnetAddress, p2shTestnetAddress, p2shRegtestAddress,
+            p2wpkhMainnetAddress, p2wpkhTestnetAddress, p2wpkhRegtestAddress,
+            p2trMainnetAddress, p2trTestnetAddress, p2trRegtestAddress
+        ]
+        const message = "48656c6c6f20426974636f696e2034352e3133302e3130352e313436";
+        const signatureBase = "JDkLNaM8vWoobA34PGQE9FIZaLF7peRh4r7DOqOHls1cP1DPwR3Hcy26+zk6yRb0qtJRHEdUflVxkScbwsOCSMw=";
+        const compatibleSignatures = generateCompatibleSignatures(signatureBase);
+
+        // Act and Assert
+        for (const signature of compatibleSignatures) {
+            // Get address flag from signature
+            const addressFlag = Buffer.from(signature, 'base64').readUInt8(0);
+            // Check if strict verification works against each address type
+            let correctAddress: Array<string> = [];
+            if (addressFlag >= 27 && addressFlag <= 30) {
+                // Only P2PKH uncompressed are valid
+                correctAddress = [p2pkhMainnetUncompressAddress, p2pkhTestnetUncompressAddress, p2pkhRegtestUncompressAddress];
+            }
+            else if (addressFlag >= 31 && addressFlag <= 34) {
+                // Only P2PKH compressed are valid
+                correctAddress = [p2pkhMainnetAddress, p2pkhTestnetAddress, p2pkhRegtestAddress];
+            }
+            else if (addressFlag >= 35 && addressFlag <= 38) {
+                // Only Segwit P2SH are valid
+                correctAddress = [p2shMainnetAddress, p2shTestnetAddress, p2shRegtestAddress];
+            }
+            else if (addressFlag >= 39 && addressFlag <= 42) {
+                // Only Segwit Bech32 are valid
+                correctAddress = [p2wpkhMainnetAddress, p2wpkhTestnetAddress, p2wpkhRegtestAddress];
+            }
+            for (const address of addresses) {
+                if (correctAddress.includes(address)) {
+                    expect(Verifier.verifySignature(address, message, signature, true)).to.be.true; // Correct address flag
+                }
+                else {
+                    expect(Verifier.verifySignature(address, message, signature, true)).to.be.false; // Incorrect address flag
+                }
+            }
+        }
+    });
+
 });
