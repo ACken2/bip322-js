@@ -1,6 +1,5 @@
 // Import dependencies
 import { expect } from 'chai';
-import * as bitcoin from 'bitcoinjs-lib';
 import * as bitcoinMessage from 'bitcoinjs-message';
 
 // Import module to be tested
@@ -18,14 +17,22 @@ describe('Signer Test', () => {
         const message = 'Hello World';
 
         // Act
+        // Sign with mainnet key
         const signature = Signer.sign(privateKey, address, message);
-        const signatureTestnet = Signer.sign(privateKeyTestnet, addressTestnet, message, bitcoin.networks.testnet);
-        const signatureRegtest = Signer.sign(privateKeyTestnet, addressRegtest, message, bitcoin.networks.regtest);
+        const signatureTestnet = Signer.sign(privateKey, addressTestnet, message);
+        const signatureRegtest = Signer.sign(privateKey, addressRegtest, message);
+        // Sign with testnet key
+        const signatureTestnetKey = Signer.sign(privateKeyTestnet, address, message);
+        const signatureTestnetTestnetKey = Signer.sign(privateKeyTestnet, addressTestnet, message);
+        const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
         expect(bitcoinMessage.verify(message, address, signature)).to.be.true;
         expect(bitcoinMessage.verify(message, addressTestnet, signatureTestnet)).to.be.true;
         expect(bitcoinMessage.verify(message, addressRegtest, signatureRegtest)).to.be.true;
+        expect(bitcoinMessage.verify(message, address, signatureTestnetKey)).to.be.true;
+        expect(bitcoinMessage.verify(message, addressTestnet, signatureTestnetTestnetKey)).to.be.true;
+        expect(bitcoinMessage.verify(message, addressRegtest, signatureRegtestTestnetKey)).to.be.true;
     });
 
     it('Can sign BIP-322 signature using nested segwit address', () => {
@@ -39,14 +46,22 @@ describe('Signer Test', () => {
         const expectedSignature = 'AkgwRQIhAMd2wZSY3x0V9Kr/NClochoTXcgDaGl3OObOR17yx3QQAiBVWxqNSS+CKen7bmJTG6YfJjsggQ4Fa2RHKgBKrdQQ+gEhAxa5UDdQCHSQHfKQv14ybcYm1C9y6b12xAuukWzSnS+w';
 
         // Act
+        // Sign with mainnet key
         const signature = Signer.sign(privateKey, address, message);
-        const signatureTestnet = Signer.sign(privateKeyTestnet, addressTestnet, message, bitcoin.networks.testnet);
-        const signatureRegtest = Signer.sign(privateKeyTestnet, addressRegtest, message, bitcoin.networks.regtest);
+        const signatureTestnet = Signer.sign(privateKey, addressTestnet, message);
+        const signatureRegtest = Signer.sign(privateKey, addressRegtest, message);
+        // Sign with testnet key
+        const signatureTestnetKey = Signer.sign(privateKeyTestnet, address, message);
+        const signatureTestnetTestnetKey = Signer.sign(privateKeyTestnet, addressTestnet, message);
+        const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
         expect(signature).to.equal(expectedSignature);
         expect(signatureTestnet).to.equal(expectedSignature);
         expect(signatureRegtest).to.equal(expectedSignature);
+        expect(signatureTestnetKey).to.equal(expectedSignature);
+        expect(signatureTestnetTestnetKey).to.equal(expectedSignature);
+        expect(signatureRegtestTestnetKey).to.equal(expectedSignature);
     });
 
     it('Can sign BIP-322 signature using native segwit address', () => {
@@ -61,14 +76,22 @@ describe('Signer Test', () => {
         const expectedSignature = 'AkgwRQIhAOzyynlqt93lOKJr+wmmxIens//zPzl9tqIOua93wO6MAiBi5n5EyAcPScOjf1lAqIUIQtr3zKNeavYabHyR8eGhowEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
 
         // Act
+        // Sign with mainnet key
         const signature = Signer.sign(privateKey, address, message);
-        const signatureTestnet = Signer.sign(privateKeyTestnet, addressTestnet, message, bitcoin.networks.testnet);
-        const signatureRegtest = Signer.sign(privateKeyTestnet, addressRegtest, message, bitcoin.networks.regtest);
+        const signatureTestnet = Signer.sign(privateKey, addressTestnet, message);
+        const signatureRegtest = Signer.sign(privateKey, addressRegtest, message);
+        // Sign with testnet key
+        const signatureTestnetKey = Signer.sign(privateKeyTestnet, address, message);
+        const signatureTestnetTestnetKey = Signer.sign(privateKeyTestnet, addressTestnet, message);
+        const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
         expect(signature).to.equal(expectedSignature);
         expect(signatureTestnet).to.equal(expectedSignature);
         expect(signatureRegtest).to.equal(expectedSignature);
+        expect(signatureTestnetKey).to.equal(expectedSignature);
+        expect(signatureTestnetTestnetKey).to.equal(expectedSignature);
+        expect(signatureRegtestTestnetKey).to.equal(expectedSignature);
     });
 
     it('Can sign BIP-322 using single-key-spend taproot address', () => {
@@ -83,14 +106,22 @@ describe('Signer Test', () => {
         const expectedSignature = "AUHd69PrJQEv+oKTfZ8l+WROBHuy9HKrbFCJu7U1iK2iiEy1vMU5EfMtjc+VSHM7aU0SDbak5IUZRVno2P5mjSafAQ==";
 
         // Act
+        // Sign with mainnet key
         const signature = Signer.sign(privateKey, address, message);
-        const signatureTestnet = Signer.sign(privateKeyTestnet, addressTestnet, message, bitcoin.networks.testnet);
-        const signatureRegtest = Signer.sign(privateKeyTestnet, addressRegtest, message, bitcoin.networks.regtest);
+        const signatureTestnet = Signer.sign(privateKey, addressTestnet, message);
+        const signatureRegtest = Signer.sign(privateKey, addressRegtest, message);
+        // Sign with testnet key
+        const signatureTestnetKey = Signer.sign(privateKeyTestnet, address, message);
+        const signatureTestnetTestnetKey = Signer.sign(privateKeyTestnet, addressTestnet, message);
+        const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
         expect(signature).to.equal(expectedSignature);
         expect(signatureTestnet).to.equal(expectedSignature);
         expect(signatureRegtest).to.equal(expectedSignature);
+        expect(signatureTestnetKey).to.equal(expectedSignature);
+        expect(signatureTestnetTestnetKey).to.equal(expectedSignature);
+        expect(signatureRegtestTestnetKey).to.equal(expectedSignature);
     });
 
     it('Throw when the provided private key cannot derive the given signing address', () => {

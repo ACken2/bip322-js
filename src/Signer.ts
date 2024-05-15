@@ -14,16 +14,17 @@ class Signer {
 
     /**
      * Sign a BIP-322 signature from P2WPKH, P2SH-P2WPKH, and single-key-spend P2TR address and its corresponding private key.
+     * Network is automatically inferred from the given address.
+     * 
      * @param privateKey Private key used to sign the message
      * @param address Address to be signing the message
      * @param message message_challenge to be signed by the address 
-     * @param network Network that the address is located, defaults to the Bitcoin mainnet
      * @returns BIP-322 simple signature, encoded in base-64
      */
-    public static sign(privateKey: string, address: string, message: string, network: bitcoin.Network = bitcoin.networks.bitcoin) {
+    public static sign(privateKey: string, address: string, message: string) {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
-        let signer = ECPair.fromWIF(privateKey, network);
+        let signer = ECPair.fromWIF(privateKey, [bitcoin.networks.bitcoin, bitcoin.networks.testnet, bitcoin.networks.regtest]);
         // Check if the private key can sign message for the given address
         if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address)) {
             throw new Error(`Invalid private key provided for signing message for ${address}.`);
@@ -45,7 +46,7 @@ class Signer {
             // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
             const redeemScript = bitcoin.payments.p2wpkh({
                 hash: bitcoin.crypto.hash160(signer.publicKey),
-                network: network
+                network: Address.getNetworkFromAddess(address)
             }).output as Buffer;
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
