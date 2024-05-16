@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.1] - 2023-06-29
+## [2.0.0] - 2024-05-16
+
+### Added
+
+- Added regtest support for signing and verifying BIP-137 and BIP-322 signatures.
+- Added `useStrictVerification` argument in `Verifier.verifySignature`. See README for its usage.
+
+### Changed
+
+- Removed `network` argument in `Signer.sign`; the network is now automatically inferred from the given address.
+- Moved `Address.compressPublicKey` and `Address.uncompressPublicKey` to `Key.compressPublicKey` and `Key.uncompressPublicKey` respectively.
+- Updated dependencies.
+
+## [1.1.1] - 2024-04-05
 
 ### Fixed
 
