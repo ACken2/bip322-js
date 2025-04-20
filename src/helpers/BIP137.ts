@@ -1,5 +1,6 @@
 // Import dependencies
 import ecc from 'secp256k1';
+import BufferUtil from './BufferUtil';
 import * as bitcoinMessage from 'bitcoinjs-message';
 
 /**
@@ -53,7 +54,7 @@ class BIP137 {
         return {
             compressed: !!(flagByte & 12),
             recovery: flagByte & 3,
-            signature: signature.subarray(1)
+            signature: BufferUtil.ensureBuffer(signature.subarray(1))
         }
     }
 

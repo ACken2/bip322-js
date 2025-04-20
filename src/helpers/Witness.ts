@@ -1,6 +1,7 @@
 // Import dependencies
 import VarInt from "./VarInt";
 import VarStr from "./VarStr";
+import BufferUtil from "./BufferUtil";
 
 /**
  * Class that implement witness data serialization and deserialization.
@@ -49,7 +50,7 @@ class Witness {
         const witnessCount = VarInt.decode(witnessToDecode);
         // Slice the VarInt in front of the witness buffer before decoding each witness
         const varIntLength = VarInt.encode(witnessCount).byteLength;
-        witnessToDecode = witnessToDecode.subarray(varIntLength);
+        witnessToDecode = BufferUtil.ensureBuffer(witnessToDecode.subarray(varIntLength));
         // Loop for each witness encoded
         for (let i=0; i<witnessCount; i++) {
             // Read a VarStr from the remaining buffer
@@ -58,7 +59,7 @@ class Witness {
             witnessDecoded.push(witness);
             // Slice the read witness off witnessToDecode before next iteration
             const witnessLength = VarStr.encode(witness).byteLength;
-            witnessToDecode = witnessToDecode.subarray(witnessLength);
+            witnessToDecode = BufferUtil.ensureBuffer(witnessToDecode.subarray(witnessLength));
         }
         // Return deserialized witness data
         return witnessDecoded;

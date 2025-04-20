@@ -2,7 +2,7 @@
 import BIP322 from "./BIP322";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
-import { Address, BIP137, Key } from "./helpers";
+import { Address, BIP137, BufferUtil, Key } from "./helpers";
 import * as bitcoinMessage from 'bitcoinjs-message';
 import { decodeScriptSignature } from './bitcoinjs';
 
@@ -61,7 +61,7 @@ class Verifier {
                 // Compute OP_HASH160(lockingScript)
                 const hashedLockingScript = bitcoin.crypto.hash160(lockingScript);
                 // For nested segwit (P2SH-P2WPKH) address, the hashed locking script is located from the 3rd byte to the last 2nd byte as OP_HASH160 <HASH> OP_EQUAL
-                const hashedLockingScriptInScriptPubKey = scriptPubKey.subarray(2, -1);
+                const hashedLockingScriptInScriptPubKey = BufferUtil.ensureBuffer(scriptPubKey.subarray(2, -1));
                 // Check if the P2SH locking script OP_HASH160 <HASH> OP_EQUAL is satisified
                 if (Buffer.compare(hashedLockingScript, hashedLockingScriptInScriptPubKey) !== 0) {
                     return false; // Reject signature if the hashed locking script is different from the hashed locking script in the scriptPubKey
@@ -72,7 +72,7 @@ class Verifier {
                 // Compute the hash that correspond to the toSignTx
                 hashToSign = this.getHashForSigP2WPKH(toSignTx);
                 // For native segwit address, the hashed public key is located from the 3rd to the end as OP_0 <HASH>
-                const hashedPubkeyInScriptPubkey = scriptPubKey.subarray(2);
+                const hashedPubkeyInScriptPubkey = BufferUtil.ensureBuffer(scriptPubKey.subarray(2));
                 // Check if OP_HASH160(publicKey) === hashedPubkeyInScriptPubkey
                 if (Buffer.compare(hashedPubkey, hashedPubkeyInScriptPubkey) !== 0) {
                     return false; // Reject signature if the hashed public key did not match
@@ -87,7 +87,7 @@ class Verifier {
                 throw new Error('BIP-322 verification from script-spend P2TR is unsupported.');
             }
             // For taproot address, the public key is located starting from the 3rd byte of the script public key
-            const publicKey = scriptPubKey.subarray(2);
+            const publicKey = BufferUtil.ensureBuffer(scriptPubKey.subarray(2));
             // Compute the hash to be signed by the signing address
             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#user-content-Taproot_key_path_spending_signature_validation
             let hashToSign: Buffer;
@@ -102,7 +102,7 @@ class Verifier {
                 // If a BIP-341 signature is 65 bytes, the signature is signed using SIGHASH included at the last byte of the signature
                 hashToSign = this.getHashForSigP2TR(toSignTx, encodedSignature[64]);
                 // And encodedSignature[0:64] holds the actual signature
-                signature = encodedSignature.subarray(0, -1);
+                signature = BufferUtil.ensureBuffer(encodedSignature.subarray(0, -1));
             }
             else {
                 // Fail validation if the signature is not 64 or 65 bytes
@@ -245,7 +245,7 @@ class Verifier {
         // Create a signing script to unlock the P2WPKH output based on the P2PKH template
         // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/ts_src/psbt.ts#L1654
         const signingScript = bitcoin.payments.p2pkh({ 
-            hash: toSignTx.data.inputs[0].witnessUtxo.script.subarray(2) 
+            hash: BufferUtil.ensureBuffer(toSignTx.data.inputs[0].witnessUtxo.script.subarray(2))
         }).output;
         // Return computed transaction hash to be signed 
         return toSignTx.extractTransaction().hashForWitnessV0(
