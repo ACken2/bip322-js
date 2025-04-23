@@ -18,7 +18,7 @@ class BIP322 {
      * @param message Message to be hashed
      * @returns Hashed message
      */
-    public static hashMessage(message: string) {
+    public static hashMessage(message: string | Buffer) {
         // Compute the message hash - SHA256(SHA256(tag) || SHA256(tag) || message)
         const tagHasher = new Hash();
         tagHasher.update(this.TAG);
@@ -37,7 +37,7 @@ class BIP322 {
      * @param scriptPublicKey The script public key for the signing wallet
      * @returns Bitcoin transaction that correspond to the to_spend transaction
      */
-    public static buildToSpendTx(message: string, scriptPublicKey: Buffer) {
+    public static buildToSpendTx(message: string | Buffer, scriptPublicKey: Buffer) {
         // Create PSBT object for constructing the transaction
         const psbt = new bitcoin.Psbt();
         // Set default value for nVersion and nLockTime
