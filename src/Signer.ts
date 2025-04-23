@@ -21,7 +21,7 @@ class Signer {
      * @param message message_challenge to be signed by the address 
      * @returns BIP-322 simple signature, encoded in base-64
      */
-    public static sign(privateKey: string, address: string, message: string) {
+    public static sign(privateKey: string, address: string, message: string): string {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
         let signer = ECPair.fromWIF(privateKey, [bitcoin.networks.bitcoin, bitcoin.networks.testnet, bitcoin.networks.regtest]);
@@ -33,7 +33,7 @@ class Signer {
         if (Address.isP2PKH(address)) {
             // For P2PKH address, sign a legacy signature
             // Reference: https://github.com/bitcoinjs/bitcoinjs-message/blob/c43430f4c03c292c719e7801e425d887cbdf7464/README.md?plain=1#L21
-            return bitcoinMessage.sign(message, signer.privateKey, signer.compressed);
+            return bitcoinMessage.sign(message, signer.privateKey, signer.compressed).toString('base64');
         }
         // Convert address into corresponding script pubkey
         const scriptPubKey = Address.convertAdressToScriptPubkey(address);
