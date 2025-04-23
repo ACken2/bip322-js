@@ -27,11 +27,17 @@ describe('Signer Test', () => {
         const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
+        expect(signature).to.be.a('string');
         expect(bitcoinMessage.verify(message, address, signature)).to.be.true;
+        expect(signatureTestnet).to.be.a('string');
         expect(bitcoinMessage.verify(message, addressTestnet, signatureTestnet)).to.be.true;
+        expect(signatureRegtest).to.be.a('string');
         expect(bitcoinMessage.verify(message, addressRegtest, signatureRegtest)).to.be.true;
+        expect(signatureTestnetKey).to.be.a('string');
         expect(bitcoinMessage.verify(message, address, signatureTestnetKey)).to.be.true;
+        expect(signatureTestnetTestnetKey).to.be.a('string');
         expect(bitcoinMessage.verify(message, addressTestnet, signatureTestnetTestnetKey)).to.be.true;
+        expect(signatureRegtestTestnetKey).to.be.a('string');
         expect(bitcoinMessage.verify(message, addressRegtest, signatureRegtestTestnetKey)).to.be.true;
     });
 
