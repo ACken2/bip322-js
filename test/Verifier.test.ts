@@ -645,4 +645,60 @@ describe('Verifier Test', () => {
         }
     });
 
+    it('Can verify and falsify BIP-137 and BIP-322 signature when a Buffer is used as message', () => {
+        // Arrange
+        const message = Buffer.from([0x11, 0x22, 0x33]); // Recreated Buffer
+        const messageWrong = Buffer.from([0x22, 0x33, 0x11]); // Recreated Buffer
+
+        const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc'; // P2PKH address
+        const p2pkhAddressWrong = '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2';
+        const p2pkhExpectedSignature = 'IL+0RavYvaxjDbKjobKW2tol5CnQOHZ23ksY3WMhnq03KnKnflY6r3r41xXIn5Dcc+nn/9swcYctslqCSWNr5qU=';
+
+        const nestedSegwitAddress = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb'; // P2SH-P2WPKH address
+        const nestedSegwitAddressWrong = '342ftSRCvFHfCeFFBuz4xwbeqnDw6BGUey';
+        const nestedSegwitExpectedSignature = 'AkgwRQIhANmscxhgHsUEL/q30kAfvLZtym6QG3MqyffsuZf6JCFYAiAsOyRTaxv6KtqoWnRtFj5SotKv03dS01sElSRFoEn1ZQEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
+        
+        const segwitAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l'; // P2WPKH address
+        const segwitAddressWrong = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
+        const segwitExpectedSignature = 'AkgwRQIhAIlAo8akRIV9mHg6/nYoJ+3yU1DWHktBmkv0byPl8qXnAiAYlFrPJsmkmdDzAu5QGR1nxEjoCoWr3SCXWAZIA2USpgEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
+        
+        const taprootAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3'; // P2TR address
+        const taprootAddressWrong = 'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8ztwac72sfr9rusxg3297';
+        const taprootExpectedSignature = 'AUGR8EenRHxFiNqsFR1k1WOo3vPC4kjaNpJRCFw9qIhChHpwiKHsfMItcqnh4fWzTCUmoVoq2pzYleXx9xuT0cadAQ==';
+
+        // Act
+        const signatureP2PKHValidity = Verifier.verifySignature(p2pkhAddress, message, p2pkhExpectedSignature);
+        const signatureP2PKHValidityWrongAddress = Verifier.verifySignature(p2pkhAddressWrong, message, p2pkhExpectedSignature);
+        const signatureP2PKHValidityWrongMessage = Verifier.verifySignature(p2pkhAddress, messageWrong, p2pkhExpectedSignature);
+
+        const signatureP2SHValidity = Verifier.verifySignature(nestedSegwitAddress, message, nestedSegwitExpectedSignature);
+        const signatureP2SHValidityWrongAddress = Verifier.verifySignature(nestedSegwitAddressWrong, message, nestedSegwitExpectedSignature);
+        const signatureP2SHValidityWrongMessage = Verifier.verifySignature(nestedSegwitAddress, messageWrong, nestedSegwitExpectedSignature);
+
+        const signatureP2WPKHValidity = Verifier.verifySignature(segwitAddress, message, segwitExpectedSignature);
+        const signatureP2WPKHValidityWrongAddress = Verifier.verifySignature(segwitAddressWrong, message, segwitExpectedSignature);
+        const signatureP2WPKHValidityWrongMessage = Verifier.verifySignature(segwitAddress, messageWrong, segwitExpectedSignature);
+
+        const signatureP2TRValidity = Verifier.verifySignature(taprootAddress, message, taprootExpectedSignature);
+        const signatureP2TRValidityWrongAddress = Verifier.verifySignature(taprootAddressWrong, message, taprootExpectedSignature);
+        const signatureP2TRValidityWrongMessage = Verifier.verifySignature(taprootAddress, messageWrong, taprootExpectedSignature);
+
+        // Assert
+        expect(signatureP2PKHValidity).to.be.true;
+        expect(signatureP2PKHValidityWrongAddress).to.be.false;
+        expect(signatureP2PKHValidityWrongMessage).to.be.false;
+
+        expect(signatureP2SHValidity).to.be.true;
+        expect(signatureP2SHValidityWrongAddress).to.be.false;
+        expect(signatureP2SHValidityWrongMessage).to.be.false;
+
+        expect(signatureP2WPKHValidity).to.be.true;
+        expect(signatureP2WPKHValidityWrongAddress).to.be.false;
+        expect(signatureP2WPKHValidityWrongMessage).to.be.false;
+
+        expect(signatureP2TRValidity).to.be.true;
+        expect(signatureP2TRValidityWrongAddress).to.be.false;
+        expect(signatureP2TRValidityWrongMessage).to.be.false;
+    });
+
 });

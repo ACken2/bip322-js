@@ -35,13 +35,16 @@ describe('BIP137 Test', () => {
         // Arrange
         const publicKey = Buffer.from('02f7fb07050d858b3289c2a0305fbac1f5b18233798665c0cbfe133e018b57cafc', 'hex');
         const message = 'Hello World';
+        const messageBuffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64]); // From Buffer.from("Hello World")
         const bip137Sig = 'IAtVrymJqo43BCt9f7Dhl6ET4Gg3SmhyvdlW6wn9iWc9PweD7tNM5+qw7xE9/bzlw/Et789AQ2F59YKEnSzQudo=';
 
         // Act
         const publicKeyDerived = BIP137.derivePubKey(message, bip137Sig);
+        const publicKeyDerivedFromBuffer = BIP137.derivePubKey(messageBuffer, bip137Sig);
 
         // Assert
         expect(publicKeyDerived).to.equalBytes(publicKey);
+        expect(publicKeyDerivedFromBuffer).to.equalBytes(publicKey);
     });
 
     it('Throw when given invalid BIP-137 signature', () => {

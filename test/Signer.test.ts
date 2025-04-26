@@ -165,4 +165,30 @@ describe('Signer Test', () => {
         expect(signP2WSH).to.throws('Unable to sign BIP-322 message for unsupported address type.');
     });
 
+    it('Can sign signature using a Buffer as message', () => {
+        // Arrange
+        const message = Buffer.from([0x11, 0x22, 0x33]);
+        const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
+        const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc'; // P2PKH address
+        const p2pkhExpectedSignature = 'IL+0RavYvaxjDbKjobKW2tol5CnQOHZ23ksY3WMhnq03KnKnflY6r3r41xXIn5Dcc+nn/9swcYctslqCSWNr5qU=';
+        const nestedSegwitAddress = '37qyp7jQAzqb2rCBpMvVtLDuuzKAUCVnJb'; // P2SH-P2WPKH address
+        const nestedSegwitExpectedSignature = 'AkgwRQIhANmscxhgHsUEL/q30kAfvLZtym6QG3MqyffsuZf6JCFYAiAsOyRTaxv6KtqoWnRtFj5SotKv03dS01sElSRFoEn1ZQEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
+        const segwitAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l'; // P2WPKH address
+        const segwitExpectedSignature = 'AkgwRQIhAIlAo8akRIV9mHg6/nYoJ+3yU1DWHktBmkv0byPl8qXnAiAYlFrPJsmkmdDzAu5QGR1nxEjoCoWr3SCXWAZIA2USpgEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
+        const taprootAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3'; // P2TR address
+        const taprootExpectedSignature = 'AUGR8EenRHxFiNqsFR1k1WOo3vPC4kjaNpJRCFw9qIhChHpwiKHsfMItcqnh4fWzTCUmoVoq2pzYleXx9xuT0cadAQ==';
+
+        // Act
+        const signatureP2PKH = Signer.sign(privateKey, p2pkhAddress, message);
+        const signatureP2SH = Signer.sign(privateKey, nestedSegwitAddress, message);
+        const signatureP2WPKH = Signer.sign(privateKey, segwitAddress, message);
+        const signatureP2TR = Signer.sign(privateKey, taprootAddress, message);
+
+        // Assert
+        expect(signatureP2PKH).to.equal(p2pkhExpectedSignature);
+        expect(signatureP2SH).to.equal(nestedSegwitExpectedSignature);
+        expect(segwitExpectedSignature).to.equal(signatureP2WPKH);
+        expect(taprootExpectedSignature).to.equal(signatureP2TR);
+    });
+
 });
