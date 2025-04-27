@@ -40,7 +40,7 @@
     },
     "dependencies": {
         "@bitcoinerlab/secp256k1": "^1.2.0",
-        "bitcoinjs-lib": "^6.1.5",
+        "bitcoinjs-lib": "^6.1.7",
         "bitcoinjs-message": "^2.2.0",
         "ecpair": "^2.1.0",
         "elliptic": "^6.5.5",
