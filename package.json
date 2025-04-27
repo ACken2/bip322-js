@@ -39,7 +39,7 @@
         "typescript": "^5.4.5"
     },
     "dependencies": {
-        "@bitcoinerlab/secp256k1": "^1.1.1",
+        "@bitcoinerlab/secp256k1": "^1.2.0",
         "bitcoinjs-lib": "^6.1.5",
         "bitcoinjs-message": "^2.2.0",
         "ecpair": "^2.1.0",
