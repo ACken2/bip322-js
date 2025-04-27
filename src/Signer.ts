@@ -21,7 +21,7 @@ class Signer {
      * @param message message_challenge to be signed by the address 
      * @returns BIP-322 simple signature, encoded in base-64
      */
-    public static sign(privateKey: string, address: string, message: string): string {
+    public static sign(privateKey: string, address: string, message: string | Buffer): string {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
         let signer = ECPair.fromWIF(privateKey, [bitcoin.networks.bitcoin, bitcoin.networks.testnet, bitcoin.networks.regtest]);

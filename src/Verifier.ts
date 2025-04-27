@@ -21,7 +21,7 @@ class Verifier {
      * @returns True if the provided signature is a valid BIP-322 signature for the given message and address, false if otherwise
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
-    public static verifySignature(signerAddress: string, message: string, signatureBase64: string, useStrictVerification: boolean = false) {
+    public static verifySignature(signerAddress: string, message: string | Buffer, signatureBase64: string, useStrictVerification: boolean = false) {
         // Check whether the given signerAddress is valid
         if (!Address.isValidBitcoinAddress(signerAddress)) {
             throw new Error("Invalid Bitcoin address is provided.");
@@ -126,7 +126,7 @@ class Verifier {
      * @returns True if the provided signature is a valid BIP-137 signature for the given message and address, false if otherwise
      * @throws If the provided signature fails basic validation, or if unsupported address and signature are provided
      */
-    private static verifyBIP137Signature(signerAddress: string, message: string, signatureBase64: string, useStrictVerification: boolean) {
+    private static verifyBIP137Signature(signerAddress: string, message: string | Buffer, signatureBase64: string, useStrictVerification: boolean) {
         if (useStrictVerification) {
             return this.bitcoinMessageVerifyWrap(message, signerAddress, signatureBase64);
         }
@@ -227,7 +227,7 @@ class Verifier {
      * @param signatureBase64 The Base64 encoded signature corresponding to the message.
      * @return boolean Returns true if the message is successfully verified, otherwise false.
      */
-    private static bitcoinMessageVerifyWrap(message: string, address: string, signatureBase64: string) {
+    private static bitcoinMessageVerifyWrap(message: string | Buffer, address: string, signatureBase64: string) {
         try {
             return bitcoinMessage.verify(message, address, signatureBase64);
         } 

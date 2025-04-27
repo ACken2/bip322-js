@@ -30,7 +30,7 @@ class BIP137 {
      * @param signature Base-64 encoded signature to be decoded
      * @returns Public key that signs the provided signature
      */
-    public static derivePubKey(message: string, signature: string) {
+    public static derivePubKey(message: string | Buffer, signature: string) {
         // Compute the hash signed by the signer
         const messageHash = bitcoinMessage.magicHash(message);
         // Decode the provided BIP-137 signature

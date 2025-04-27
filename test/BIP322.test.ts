@@ -15,10 +15,13 @@ describe('BIP322 Test', () => {
         // Test vector listed at https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki#user-content-Message_hashing
         const emptyStringHash = BIP322.hashMessage("");
         const helloWorldHash = BIP322.hashMessage("Hello World");
+        const helloWorldBuffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64]); // From Buffer.from("Hello World")
+        const helloWorldBufferHash = BIP322.hashMessage(helloWorldBuffer);
 
         // Assert
         expect(Buffer.from(emptyStringHash).toString('hex').toLowerCase()).to.equal("c90c269c4f8fcbe6880f72a721ddfbf1914268a794cbb21cfafee13770ae19f1");
         expect(Buffer.from(helloWorldHash).toString('hex').toLowerCase()).to.equal("f0eb03b1a75ac6d9847f55c624a99169b5dccba2a31f5b23bea77ba270de0a7a");
+        expect(Buffer.from(helloWorldBufferHash).toString('hex').toLowerCase()).to.equal("f0eb03b1a75ac6d9847f55c624a99169b5dccba2a31f5b23bea77ba270de0a7a");
     });
 
     it('Draft correct BIP-322 toSpend transaction', () => {
@@ -28,16 +31,20 @@ describe('BIP322 Test', () => {
         const scriptPubKey = bitcoin.payments.p2wpkh({
 			address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l"
 		}).output as Buffer;
+        const helloWorldBuffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64]); // From Buffer.from("Hello World")
 
         // Act
         // Draft a toSpend transaction with empty message
         const emptyStringToSpendTx = BIP322.buildToSpendTx("", scriptPubKey);
         // Draft a toSpend transaction with Hello World
         const helloWorldToSpendTx = BIP322.buildToSpendTx("Hello World", scriptPubKey);
+        // Draft a toSpend transaction with Hello World as Buffer
+        const helloWorldBufferToSpendTx = BIP322.buildToSpendTx(helloWorldBuffer, scriptPubKey);
 
         // Assert
         expect(emptyStringToSpendTx.getId().toLowerCase()).to.equal("c5680aa69bb8d860bf82d4e9cd3504b55dde018de765a91bb566283c545a99a7");
         expect(helloWorldToSpendTx.getId().toLowerCase()).to.equal("b79d196740ad5217771c1098fc4a4b51e0535c32236c71f1ea4d61a2d603352b");
+        expect(helloWorldBufferToSpendTx.getId().toLowerCase()).to.equal("b79d196740ad5217771c1098fc4a4b51e0535c32236c71f1ea4d61a2d603352b");
     });
 
     it('Draft correct BIP-322 toSign transaction', () => {
