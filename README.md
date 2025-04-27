@@ -108,12 +108,18 @@ const toSign = BIP322.buildToSignTx(toSpendTxId, scriptPubKey); // bitcoin.Psbt
 
 More working examples can be found within the unit test for BIP322, Signer, and Verifier.
 
-## Migration Guide from v1.X
+## ⚠️ Breaking Change and Migration Guide
 
-There are only two non-backward-compatible changes in the API:
+### From v1.X
 
 1. If you previously used `Address.compressPublicKey` or `Address.uncompressPublicKey`, 
 replace them with `Key.compressPublicKey` and `Key.uncompressPublicKey` respectively.
 
 2. In v1.X, there was an option to pass the `network` parameter into `Signer.sign`: `Signer.sign(privateKey, address, message, network)`. 
 This option has been removed, as the network is now automatically inferred from the given address.
+
+### From v2.X
+
+1. If your code depended on receiving a Buffer from `Signer.sign` for P2PKH addresses, you must update it to handle the returned Base64-encoded string instead.
+
+2. Signature Handling: Version 1.2.0 of the underlying `@bitcoinerlab/secp256k1` library introduced a change to signSchnorr. It now incorporates secure random data (auxRand) by default during Schnorr signature generation (used in BIP-322), whereas previous versions might have produced deterministic outputs under certain conditions. This means signing the same message with the same key will now yield different, but equally valid, signature bytes each time.
