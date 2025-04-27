@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import * as bitcoinMessage from 'bitcoinjs-message';
 
 // Import module to be tested
-import { Signer } from '../src';
+import { Signer, Verifier } from '../src';
 
 describe('Signer Test', () => {
 
@@ -109,7 +109,6 @@ describe('Signer Test', () => {
         const addressTestnet = 'tb1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5s3g3s37';
         const addressRegtest = 'bcrt1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5su3mkyy';
         const message = "Hello World";
-        const expectedSignature = "AUHd69PrJQEv+oKTfZ8l+WROBHuy9HKrbFCJu7U1iK2iiEy1vMU5EfMtjc+VSHM7aU0SDbak5IUZRVno2P5mjSafAQ==";
 
         // Act
         // Sign with mainnet key
@@ -122,12 +121,13 @@ describe('Signer Test', () => {
         const signatureRegtestTestnetKey = Signer.sign(privateKeyTestnet, addressRegtest, message);
 
         // Assert
-        expect(signature).to.equal(expectedSignature);
-        expect(signatureTestnet).to.equal(expectedSignature);
-        expect(signatureRegtest).to.equal(expectedSignature);
-        expect(signatureTestnetKey).to.equal(expectedSignature);
-        expect(signatureTestnetTestnetKey).to.equal(expectedSignature);
-        expect(signatureRegtestTestnetKey).to.equal(expectedSignature);
+        // We can no longer expect constant signature
+        expect(Verifier.verifySignature(address, message, signature)).to.be.true;
+        expect(Verifier.verifySignature(addressTestnet, message, signatureTestnet)).to.be.true;
+        expect(Verifier.verifySignature(addressRegtest, message, signatureRegtest)).to.be.true;
+        expect(Verifier.verifySignature(address, message, signatureTestnetKey)).to.be.true;
+        expect(Verifier.verifySignature(addressTestnet, message, signatureTestnetTestnetKey)).to.be.true;
+        expect(Verifier.verifySignature(addressRegtest, message, signatureRegtestTestnetKey)).to.be.true;
     });
 
     it('Throw when the provided private key cannot derive the given signing address', () => {
@@ -176,7 +176,6 @@ describe('Signer Test', () => {
         const segwitAddress = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l'; // P2WPKH address
         const segwitExpectedSignature = 'AkgwRQIhAIlAo8akRIV9mHg6/nYoJ+3yU1DWHktBmkv0byPl8qXnAiAYlFrPJsmkmdDzAu5QGR1nxEjoCoWr3SCXWAZIA2USpgEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy';
         const taprootAddress = 'bc1ppv609nr0vr25u07u95waq5lucwfm6tde4nydujnu8npg4q75mr5sxq8lt3'; // P2TR address
-        const taprootExpectedSignature = 'AUGR8EenRHxFiNqsFR1k1WOo3vPC4kjaNpJRCFw9qIhChHpwiKHsfMItcqnh4fWzTCUmoVoq2pzYleXx9xuT0cadAQ==';
 
         // Act
         const signatureP2PKH = Signer.sign(privateKey, p2pkhAddress, message);
@@ -188,7 +187,7 @@ describe('Signer Test', () => {
         expect(signatureP2PKH).to.equal(p2pkhExpectedSignature);
         expect(signatureP2SH).to.equal(nestedSegwitExpectedSignature);
         expect(segwitExpectedSignature).to.equal(signatureP2WPKH);
-        expect(taprootExpectedSignature).to.equal(signatureP2TR);
+        expect(Verifier.verifySignature(taprootAddress, message, signatureP2TR)).to.be.true; // We can no longer expect constant signature
     });
 
 });
