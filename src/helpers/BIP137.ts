@@ -1,7 +1,7 @@
 // Import dependencies
-import ecc from 'secp256k1';
 import BufferUtil from './BufferUtil';
-import * as bitcoinMessage from 'bitcoinjs-message';
+import BitcoinMessage from './BitcoinMessage';
+import { secp256k1 } from '@noble/curves/secp256k1.js';
 
 /**
  * Class that implement BIP137-related utility functions.
@@ -32,11 +32,19 @@ class BIP137 {
      */
     public static derivePubKey(message: string | Buffer, signature: string) {
         // Compute the hash signed by the signer
-        const messageHash = bitcoinMessage.magicHash(message);
+        const messageHash = BitcoinMessage.magicHash(message);
         // Decode the provided BIP-137 signature
         const signatureDecoded = this.decodeSignature(Buffer.from(signature, 'base64'));
-        // Recover the public key
-        return Buffer.from(ecc.ecdsaRecover(signatureDecoded.signature, signatureDecoded.recovery, messageHash, signatureDecoded.compressed));
+        // Slice the 64-byte signature into r and s
+        // Note: BIP-137 signatureDecoded.signature is 64 bytes (r + s)
+        const r = BigInt('0x' + signatureDecoded.signature.subarray(0, 32).toString('hex'));
+        const s = BigInt('0x' + signatureDecoded.signature.subarray(32, 64).toString('hex'));
+        // Construct the Signature and add the recovery bit
+        const sig = new secp256k1.Signature(r, s).addRecoveryBit(signatureDecoded.recovery);
+        // 3. Recover the public key
+        const point = sig.recoverPublicKey(messageHash);
+        // Convert Point -> Buffer (using the compressed flag from the decoded signature)
+        return Buffer.from(point.toBytes(signatureDecoded.compressed));
     }
 
     /**
