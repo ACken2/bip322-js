@@ -47,12 +47,12 @@ class BitcoinMessage {
             extraEntropy: options?.extraEntropy 
         };
         
-        const sigAny = secp256k1.sign(hash, privateKey, opts as any);
+        const sig = secp256k1.sign(hash, privateKey, opts as any);
 
         let r: bigint, s: bigint, recovery: number;
 
-        r = BigInt('0x' + Buffer.from(sigAny.subarray(0, 32)).toString('hex'));
-        s = BigInt('0x' + Buffer.from(sigAny.subarray(32, 64)).toString('hex'));
+        r = BigInt('0x' + Buffer.from(sig.subarray(0, 32)).toString('hex'));
+        s = BigInt('0x' + Buffer.from(sig.subarray(32, 64)).toString('hex'));
         
         // Recalculate recovery ID
         recovery = 0;
@@ -89,7 +89,7 @@ class BitcoinMessage {
         }
 
         // 3. Combine [1 byte of header data][32 bytes for r value][32 bytes for s value] into BIP-137 signature
-        return Buffer.concat([Buffer.from([header]), sigAny]);
+        return Buffer.concat([Buffer.from([header]), Buffer.from(sig)]);
     }
 
     /**
