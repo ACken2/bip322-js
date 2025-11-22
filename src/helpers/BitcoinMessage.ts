@@ -111,6 +111,7 @@ class BitcoinMessage {
      * @param address The Bitcoin address (Legacy, Segwit, or Bech32) that supposedly signed the message.
      * @param signatureBase64 The Base64 encoded signature string.
      * @returns boolean Returns true if the signature is valid for the given message and address, false otherwise.
+     * @throws Error if unexpected error is encountered (e.g., unexpected object being passed as an message)
      */
     public static verify(message: string | Buffer, address: string, signatureBase64: string): boolean {
         const signatureBuffer = Buffer.from(signatureBase64, 'base64');
@@ -144,39 +145,34 @@ class BitcoinMessage {
 
         if (recId < 0 || recId > 3) return false;
 
-        try {
-            // 2. Recover Public Key
-            const pubKey = BIP137.derivePubKey(message, signatureBase64);
+        // 2. Recover Public Key
+        const pubKey = BIP137.derivePubKey(message, signatureBase64);
 
-            // 3. Get Target Script (Network Agnostic)
-            // Automatically detect network by trying all options
-            const targetScript = this.toOutputScriptAnyNetwork(address);
-            if (!targetScript) return false; // Address was invalid on all networks
+        // 3. Get Target Script (Network Agnostic)
+        // Automatically detect network by trying all options
+        const targetScript = this.toOutputScriptAnyNetwork(address);
+        if (!targetScript) return false; // Address was invalid on all networks
 
-            // 4. Derive the Expected Output Script from the Recovered Key
-            let payment: any;
-            
-            if (type === 'p2wpkh') {
-                payment = payments.p2wpkh({ pubkey: pubKey });
-            } 
-            else if (type === 'p2sh(p2wpkh)') {
-                payment = payments.p2sh({ 
-                    redeem: payments.p2wpkh({ pubkey: pubKey }) 
-                });
-            } 
-            else {
-                // Assumed p2pkh
-                // It automatically infers either a P2PKH Compressed or P2PKH Uncompressed 
-                // based on the flag presented on the signature
-                payment = payments.p2pkh({ pubkey: pubKey });
-            }
-
-            // 5. Compare the Scripts
-            return payment.output.equals(targetScript);
+        // 4. Derive the Expected Output Script from the Recovered Key
+        let payment: any;
+        
+        if (type === 'p2wpkh') {
+            payment = payments.p2wpkh({ pubkey: pubKey });
         } 
-        catch (e) {
-            return false;
+        else if (type === 'p2sh(p2wpkh)') {
+            payment = payments.p2sh({ 
+                redeem: payments.p2wpkh({ pubkey: pubKey }) 
+            });
+        } 
+        else {
+            // Assumed p2pkh
+            // It automatically infers either a P2PKH Compressed or P2PKH Uncompressed 
+            // based on the flag presented on the signature
+            payment = payments.p2pkh({ pubkey: pubKey });
         }
+
+        // 5. Compare the Scripts
+        return payment.output.equals(targetScript);
     }
 
     /**
