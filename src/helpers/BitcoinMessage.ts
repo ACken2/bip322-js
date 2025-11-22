@@ -122,26 +122,20 @@ class BitcoinMessage {
 
         // 1. Parse Header to determine Key Compression and Address Type
         let recId = header - 27;
-        let compressed = false;
         let type: 'p2pkh' | 'p2sh(p2wpkh)' | 'p2wpkh' = 'p2pkh';
 
         if (header >= 39) { // Segwit Bech32
             recId -= 12;
             type = 'p2wpkh';
-            compressed = true;
         } 
         else if (header >= 35) { // Segwit P2SH
             recId -= 8;
             type = 'p2sh(p2wpkh)';
-            compressed = true;
         } 
         else if (header >= 31) { // Compressed P2PKH
             recId -= 4;
-            compressed = true;
         } 
-        else { // Uncompressed P2PKH
-            compressed = false;
-        }
+        else {} // Uncompressed P2PKH
 
         if (recId < 0 || recId > 3) return false;
 
