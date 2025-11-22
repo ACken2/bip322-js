@@ -3,7 +3,7 @@ import BIP322 from "./BIP322";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import { Address, BIP137, BufferUtil, Key } from "./helpers";
-import * as bitcoinMessage from 'bitcoinjs-message';
+import { BitcoinMessage } from './helpers';
 import { decodeScriptSignature } from './bitcoinjs';
 
 /**
@@ -229,7 +229,7 @@ class Verifier {
      */
     private static bitcoinMessageVerifyWrap(message: string | Buffer, address: string, signatureBase64: string) {
         try {
-            return bitcoinMessage.verify(message, address, signatureBase64);
+            return BitcoinMessage.verify(message, address, signatureBase64);
         } 
         catch (err) {
             return false; // Instead of throwing, just return false
