@@ -166,6 +166,8 @@ class BitcoinMessage {
             } 
             else {
                 // Assumed p2pkh
+                // It automatically infers either a P2PKH Compressed or P2PKH Uncompressed 
+                // based on the flag presented on the signature
                 payment = payments.p2pkh({ pubkey: pubKey });
             }
 
