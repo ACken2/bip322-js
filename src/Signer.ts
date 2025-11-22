@@ -32,7 +32,6 @@ class Signer {
         // Handle legacy P2PKH signature
         if (Address.isP2PKH(address)) {
             // For P2PKH address, sign a legacy signature
-            // Reference: https://github.com/bitcoinjs/bitcoinjs-message/blob/c43430f4c03c292c719e7801e425d887cbdf7464/README.md?plain=1#L21
             return BitcoinMessage.sign(message, signer.privateKey, signer.compressed).toString('base64');
         }
         // Convert address into corresponding script pubkey
