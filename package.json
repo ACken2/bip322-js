@@ -18,6 +18,9 @@
         "typescript",
         "no-WASM"
     ],
+    "engines": {
+        "node": ">=20.19.0"
+    },
     "author": "Ken Sze <acken2@outlook.com>",
     "repository": {
         "type": "git",
