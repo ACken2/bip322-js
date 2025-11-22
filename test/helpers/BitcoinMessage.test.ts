@@ -6,7 +6,7 @@ import * as ecc from '@bitcoinerlab/secp256k1';
 import * as crypto from 'crypto';
 import Key from '../../src/helpers/Key';
 import VarInt from '../../src/helpers/VarInt';
-import BitcoinMessage from '../../src/helpers/BitcoinMessage';
+import { BitcoinMessage } from '../../src';
 import * as bitcoinMessage from 'bitcoinjs-message'; // Reference implementation
 
 // Setup Chai
@@ -218,12 +218,13 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
         expect(isValid).to.be.false;
     });
 
-    it('should fail if message is neither string or buffer', () => {
+    it('should throw if message is neither string or buffer', () => {
         const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
         let signature = BitcoinMessage.sign(message, privateKey, true);
         
-        const isValid = BitcoinMessage.verify(({ whoami: 'def only a string/buffer' } as any), address, signature.toString('base64'));
-        expect(isValid).to.be.false;
+        expect(() => {
+            BitcoinMessage.verify(({ whoami: 'def only a string/buffer' } as any), address, signature.toString('base64'))
+        }).to.throw();
     });
     
     it('should properly handle Testnet addresses without explicit network param', () => {
