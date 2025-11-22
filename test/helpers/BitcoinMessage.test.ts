@@ -4,6 +4,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import { ECPairFactory } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
 import * as crypto from 'crypto';
+import Key from '../../src/helpers/Key';
 import VarInt from '../../src/helpers/VarInt';
 import BitcoinMessage from '../../src/helpers/BitcoinMessage';
 import * as bitcoinMessage from 'bitcoinjs-message'; // Reference implementation
@@ -138,8 +139,9 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
         redeem: bitcoin.payments.p2wpkh({ pubkey: publicKey })
     }).address!;
     const addressP2WPKH = bitcoin.payments.p2wpkh({ pubkey: publicKey }).address!;
+    const addressP2TR = bitcoin.payments.p2tr({ pubkey: Key.toXOnly(publicKey) }).address!;
 
-    const addressLists = [addressP2PKHUncompressed, addressP2PKHCompressed, addressP2SH, addressP2WPKH];
+    const addressLists = [addressP2PKHUncompressed, addressP2PKHCompressed, addressP2SH, addressP2WPKH, addressP2TR];
     const testSuite = [
         { address: addressP2PKHUncompressed, compressed: false, options: undefined, name: 'P2PKH Uncompressed' },
         { address: addressP2PKHCompressed, compressed: true, options: undefined, name: 'P2PKH Compressed' },
