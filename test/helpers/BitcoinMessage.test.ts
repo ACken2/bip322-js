@@ -162,6 +162,21 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
         });
     });
 
+    it('should fail if signature is not 65 bytes', () => {
+        const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
+        let signature = BitcoinMessage.sign(message, privateKey, true);
+        
+        // Remove one byte
+        const signatureTooShort = signature.subarray(1);
+        // Add one byte at the end
+        const signatureTooLong = Buffer.concat([signature, Buffer.from([0x01])]);
+
+        const isValidTooShort = BitcoinMessage.verify(message, address, signatureTooShort.toString('base64'));
+        expect(isValidTooShort).to.be.false;
+        const isValidTooLong = BitcoinMessage.verify(message, address, signatureTooLong.toString('base64'));
+        expect(isValidTooLong).to.be.false;
+    });
+
     it('should fail if signature is corrupted', () => {
         const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
         let signature = BitcoinMessage.sign(message, privateKey, true);
@@ -170,6 +185,44 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
         signature[10] = signature[10] ^ 0xFF; 
 
         const isValid = BitcoinMessage.verify(message, address, signature.toString('base64'));
+        expect(isValid).to.be.false;
+    });
+
+    it('should fail if address is invalid', () => {
+        const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
+        let signature = BitcoinMessage.sign(message, privateKey, true);
+        
+        const isValid = BitcoinMessage.verify(message, `${address}1`, signature.toString('base64'));
+        expect(isValid).to.be.false;
+    });
+
+    it('should fail if header is invalid (recId > 3)', () => {
+        const address = bitcoin.payments.p2wpkh({ pubkey: publicKey }).address!;
+        let signature = BitcoinMessage.sign(message, privateKey, true, { segwitType: 'p2wpkh' });
+
+        // Add 4 to the header bit
+        // This would make it invalid in BIP-137 standard (header = 44; recId = 5)
+        signature[0] += 4;
+        const isValid = BitcoinMessage.verify(message, address, signature.toString('base64'));
+        expect(isValid).to.be.false;
+    });
+
+    it('should fail if header is invalid (recId < 0)', () => {
+        const address = bitcoin.payments.p2pkh({ pubkey: publicKeyUncompressed }).address!;
+        let signature = BitcoinMessage.sign(message, privateKey, false);
+
+        // Subtract 4 to the header bit
+        // This would make it invalid in BIP-137 standard (header = 24; recId = -3)
+        signature[0] -= 4;
+        const isValid = BitcoinMessage.verify(message, address, signature.toString('base64'));
+        expect(isValid).to.be.false;
+    });
+
+    it('should fail if message is neither string or buffer', () => {
+        const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
+        let signature = BitcoinMessage.sign(message, privateKey, true);
+        
+        const isValid = BitcoinMessage.verify(({ whoami: 'def only a string/buffer' } as any), address, signature.toString('base64'));
         expect(isValid).to.be.false;
     });
     
