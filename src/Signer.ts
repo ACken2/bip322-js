@@ -4,7 +4,7 @@ import ECPairFactory from 'ecpair';
 import { Address, Key } from "./helpers";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
-import * as bitcoinMessage from 'bitcoinjs-message';
+import { BitcoinMessage } from './helpers';
 
 /**
  * Class that signs BIP-322 signature using a private key.
@@ -32,8 +32,7 @@ class Signer {
         // Handle legacy P2PKH signature
         if (Address.isP2PKH(address)) {
             // For P2PKH address, sign a legacy signature
-            // Reference: https://github.com/bitcoinjs/bitcoinjs-message/blob/c43430f4c03c292c719e7801e425d887cbdf7464/README.md?plain=1#L21
-            return bitcoinMessage.sign(message, signer.privateKey, signer.compressed).toString('base64');
+            return BitcoinMessage.sign(message, signer.privateKey, signer.compressed).toString('base64');
         }
         // Convert address into corresponding script pubkey
         const scriptPubKey = Address.convertAdressToScriptPubkey(address);

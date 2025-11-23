@@ -1,4 +1,4 @@
-import { ec as EC } from 'elliptic';
+import { secp256k1 } from '@noble/curves/secp256k1.js';
 
 /**
  * Class that implement key-related utility functions.
@@ -33,29 +33,25 @@ class Key {
      * This method takes a public key in its uncompressed form and returns a compressed
      * representation of the public key. Elliptic curve public keys can be represented in 
      * a shorter form known as compressed format which saves space and still retains the 
-     * full public key's capabilities. The method uses the elliptic library to convert the
-     * uncompressed public key into its compressed form.
+     * full public key's capabilities.
      * 
      * The steps involved in the process are:
-     * 1. Initialize a new elliptic curve instance for the secp256k1 curve.
-     * 2. Create a key pair object from the uncompressed public key buffer.
-     * 3. Extract the compressed public key from the key pair object.
-     * 4. Return the compressed public key as a Buffer object.
+     * 1. Parse the uncompressed public key bytes into a secp256k1 Point object.
+     * 2. Serialize the Point into its compressed binary format.
+     * 3. Return the compressed public key as a Buffer object.
      * 
      * @param uncompressedPublicKey A Buffer containing the uncompressed public key.
      * @return Buffer Returns a Buffer containing the compressed public key.
      * @throws Error Throws an error if the provided public key cannot be compressed,
-     *         typically indicating that the key is not valid.
+     * typically indicating that the key is not valid.
      */
     public static compressPublicKey(uncompressedPublicKey: Buffer): Buffer {
-        // Initialize elliptic curve
-        const ec = new EC('secp256k1');
         // Try to compress the provided public key
         try {
             // Create a key pair from the uncompressed public key buffer
-            const keyPair = ec.keyFromPublic(Buffer.from(uncompressedPublicKey));
+            const point = secp256k1.Point.fromBytes(Buffer.from(uncompressedPublicKey));
             // Get the compressed public key as a Buffer
-            const compressedPublicKey = Buffer.from(keyPair.getPublic(true, 'array'));
+            const compressedPublicKey = Buffer.from(point.toBytes(true));
             return compressedPublicKey;
         }
         catch (err) {
@@ -67,31 +63,27 @@ class Key {
      * Uncompresses a given public key using the elliptic curve secp256k1.
      * This method accepts a compressed public key and attempts to convert it into its
      * uncompressed form. Public keys are often compressed to save space, but certain
-     * operations require the full uncompressed key. This method uses the elliptic
-     * library to perform the conversion.
+     * operations require the full uncompressed key.
      *
      * The function operates as follows:
-     * 1. Initialize a new elliptic curve instance using secp256k1.
-     * 2. Attempt to create a key pair from the compressed public key buffer.
-     * 3. Extract the uncompressed public key from the key pair object.
-     * 4. Return the uncompressed public key as a Buffer object.
+     * 1. Parse the compressed public key bytes into a secp256k1 Point object.
+     * 2. Serialize the Point into its uncompressed binary format.
+     * 3. Return the uncompressed public key as a Buffer object.
      * If the compressed public key provided is invalid and cannot be uncompressed, 
      * the method will throw an error with a descriptive message.
      * 
      * @param compressedPublicKey A Buffer containing the compressed public key.
      * @return Buffer The uncompressed public key as a Buffer.
      * @throws Error Throws an error if the provided public key cannot be uncompressed,
-     *         typically indicating that the key is not valid.
+     * typically indicating that the key is not valid.
      */
     public static uncompressPublicKey(compressedPublicKey: Buffer): Buffer {
-        // Initialize elliptic curve
-        const ec = new EC('secp256k1');
         // Try to uncompress the provided public key
         try {
             // Create a key pair from the compressed public key buffer
-            const keyPair = ec.keyFromPublic(Buffer.from(compressedPublicKey));
+            const point = secp256k1.Point.fromBytes(Buffer.from(compressedPublicKey));
             // Get the compressed public key as a Buffer
-            const uncompressedPublicKey = Buffer.from(keyPair.getPublic(false, 'array'));
+            const uncompressedPublicKey = Buffer.from(point.toBytes(false)); // false = uncompressed
             return uncompressedPublicKey;
         }
         catch (err) {

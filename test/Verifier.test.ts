@@ -701,4 +701,19 @@ describe('Verifier Test', () => {
         expect(signatureP2TRValidityWrongMessage).to.be.false;
     });
 
+    it('Reject BIP-137 signature if message is neither string or buffer', () => {
+        // Arrange
+        const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc'; // P2PKH address
+        const p2pkhExpectedSignature = 'IL+0RavYvaxjDbKjobKW2tol5CnQOHZ23ksY3WMhnq03KnKnflY6r3r41xXIn5Dcc+nn/9swcYctslqCSWNr5qU='; // Message: Buffer.from([0x11, 0x22, 0x33])
+
+        // Act
+        const isValid = Verifier.verifySignature(p2pkhAddress, ({ whoami: 'def only a string/buffer' } as any), p2pkhExpectedSignature, true);
+
+        // Assert
+        expect(isValid).to.be.false; // Will return false if useStrictVerification
+        expect(() => {
+            Verifier.verifySignature(p2pkhAddress, ({ whoami: 'def only a string/buffer' } as any), p2pkhExpectedSignature)
+        }).to.throw(); // Will throw instead if not using useStrictVerification
+    });
+
 });

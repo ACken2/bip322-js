@@ -3,7 +3,7 @@ import BIP322 from "./BIP322";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import { Address, BIP137, BufferUtil, Key } from "./helpers";
-import * as bitcoinMessage from 'bitcoinjs-message';
+import { BitcoinMessage } from './helpers';
 import { decodeScriptSignature } from './bitcoinjs';
 
 /**
@@ -143,7 +143,7 @@ class Verifier {
             publicKeySignedUncompressed = Key.uncompressPublicKey(publicKeySignedRaw);
             publicKeySigned = publicKeySignedRaw; // The key recovered is a compressed key
         }
-        // Obtain the equivalent signing address in all address types (except taproot) to prepare for validation from bitcoinjs-message
+        // Obtain the equivalent signing address in all address types (except taproot) to prepare for validation from BitcoinMessage
         // Taproot address is not needed since technically BIP-137 signatures does not support taproot address
         const p2pkhSigningAddressUncompressed = Address.convertPubKeyIntoAddress(publicKeySignedUncompressed, 'p2pkh').mainnet;
         const p2pkhSigningAddressCompressed = Address.convertPubKeyIntoAddress(publicKeySigned, 'p2pkh').mainnet;
@@ -197,7 +197,7 @@ class Verifier {
                 return false; // Derived address did not match with the claimed signing address
             }
         }
-        // Validate the signature using bitcoinjs-message if address assertion succeeded
+        // Validate the signature using BitcoinMessage if address assertion succeeded
         // Accept the signature if it originates from any address derivable from the public key
         const validity = (
             this.bitcoinMessageVerifyWrap(message, p2pkhSigningAddressUncompressed, signatureBase64) || 
@@ -216,7 +216,7 @@ class Verifier {
      * of allowing the exception to propagate.
      * 
      * The process is as follows:
-     * 1. The `bitcoinjs-message.verify` function is called with the message, address,
+     * 1. The `BitcoinMessage.verify` function is called with the message, address,
      *    and signature provided in Base64 encoding.
      * 2. If the verification is successful, the method returns true.
      * 3. If any error occurs during the verification, the method catches the error 
@@ -229,7 +229,7 @@ class Verifier {
      */
     private static bitcoinMessageVerifyWrap(message: string | Buffer, address: string, signatureBase64: string) {
         try {
-            return bitcoinMessage.verify(message, address, signatureBase64);
+            return BitcoinMessage.verify(message, address, signatureBase64);
         } 
         catch (err) {
             return false; // Instead of throwing, just return false
