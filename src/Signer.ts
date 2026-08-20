@@ -1,7 +1,7 @@
 // Import dependencies
 import BIP322 from "./BIP322";
-import ECPairFactory from 'ecpair';
-import { Address, Key } from "./helpers";
+import { ECPairFactory } from 'ecpair';
+import { Address, BufferUtil, Key } from "./helpers";
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import { BitcoinMessage } from './helpers';
@@ -25,14 +25,23 @@ class Signer {
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
         let signer = ECPair.fromWIF(privateKey, [bitcoin.networks.bitcoin, bitcoin.networks.testnet, bitcoin.networks.regtest]);
+        // Normalize the WIF-derived public key for package-owned Buffer APIs
+        const publicKey = BufferUtil.ensureBuffer(signer.publicKey);
         // Check if the private key can sign message for the given address
-        if (!this.checkPubKeyCorrespondToAddress(signer.publicKey, address)) {
+        if (!this.checkPubKeyCorrespondToAddress(publicKey, address)) {
             throw new Error(`Invalid private key provided for signing message for ${address}.`);
         }
         // Handle legacy P2PKH signature
         if (Address.isP2PKH(address)) {
             // For P2PKH address, sign a legacy signature
-            return BitcoinMessage.sign(message, signer.privateKey, signer.compressed).toString('base64');
+            if (!signer.privateKey) {
+                throw new Error(`Invalid private key provided for signing message for ${address}.`);
+            }
+            return BitcoinMessage.sign(
+                message,
+                BufferUtil.ensureBuffer(signer.privateKey),
+                signer.compressed
+            ).toString('base64');
         }
         // Convert address into corresponding script pubkey
         const scriptPubKey = Address.convertAdressToScriptPubkey(address);
@@ -43,10 +52,14 @@ class Signer {
         if (Address.isP2SH(address)) {
             // P2SH-P2WPKH signing path
             // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
-            const redeemScript = bitcoin.payments.p2wpkh({
-                hash: bitcoin.crypto.hash160(signer.publicKey),
+            const redeemOutput = bitcoin.payments.p2wpkh({
+                hash: bitcoin.crypto.hash160(publicKey),
                 network: Address.getNetworkFromAddess(address)
-            }).output as Buffer;
+            }).output;
+            if (!redeemOutput) {
+                throw new Error(`Unable to derive redeem script for ${address}.`);
+            }
+            const redeemScript = BufferUtil.ensureBuffer(redeemOutput);
             toSignTx = BIP322.buildToSignTx(toSpendTx.getId(), redeemScript, true);
         }
         else if (Address.isP2WPKH(address)) {
@@ -56,7 +69,7 @@ class Signer {
         else {
             // P2TR signing path
             // Extract the taproot internal public key
-            const internalPublicKey = Key.toXOnly(signer.publicKey);
+            const internalPublicKey = Key.toXOnly(publicKey);
             // Tweak the private key for signing, since the output and address uses tweaked key
             // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
             signer = signer.tweak(
