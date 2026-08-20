@@ -1,11 +1,25 @@
 // Import dependencies
-import ECPairFactory from 'ecpair';
+import { ECPairFactory } from 'ecpair';
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 import { expect } from 'chai';
+import { BufferUtil } from "../src/helpers";
 
 // Import module to be tested
 import { BIP322 } from "../src";
+
+/**
+ * Convert a bitcoinjs-lib payment output into a Buffer.
+ *
+ * @param output Payment output produced by bitcoinjs-lib
+ * @returns Buffer containing the script public key
+ */
+function requirePaymentOutput(output: Uint8Array | undefined): Buffer {
+    if (!output) {
+        throw new Error('Expected payment output');
+    }
+    return BufferUtil.ensureBuffer(output);
+}
 
 // Tests
 describe('BIP322 Test', () => {
@@ -28,9 +42,9 @@ describe('BIP322 Test', () => {
         // Arrange
         // Test vector listed at https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki#user-content-Transaction_Hashes
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2wpkh({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2wpkh({
 			address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l"
-		}).output as Buffer;
+		}).output);
         const helloWorldBuffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64]); // From Buffer.from("Hello World")
 
         // Act
@@ -51,9 +65,9 @@ describe('BIP322 Test', () => {
         // Arrange
         // Test vector listed at https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki#user-content-Transaction_Hashes
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2wpkh({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2wpkh({
 			address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l"
-		}).output as Buffer;
+		}).output);
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
         const testPrivateKey = ECPair.fromWIF(
@@ -81,9 +95,9 @@ describe('BIP322 Test', () => {
         // Arrange
         // Test vector listed at https://github.com/bitcoin/bitcoin/blob/29b28d07fa958b89e1c7916fda5d8654474cf495/src/test/util_tests.cpp#L2713
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2wpkh({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2wpkh({
 			address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l"
-		}).output as Buffer;
+		}).output);
         // Initialize private key used to sign the transaction
         const ECPair = ECPairFactory(ecc);
         const testPrivateKey = ECPair.fromWIF(
@@ -105,9 +119,9 @@ describe('BIP322 Test', () => {
         // Arrange
         // Test vector listed at https://github.com/bitcoin/bitcoin/blob/29b28d07fa958b89e1c7916fda5d8654474cf495/src/test/util_tests.cpp#L2713
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2wpkh({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2wpkh({
 			address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l"
-		}).output as Buffer;
+		}).output);
         // Draft a toSign transaction with Hello World
         const toSpendTxId = "b79d196740ad5217771c1098fc4a4b51e0535c32236c71f1ea4d61a2d603352b";
         const toSignTx = BIP322.buildToSignTx(toSpendTxId, scriptPubKey);
