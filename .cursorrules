@@ -1,0 +1,5 @@
+Always write Git commit messages as a single, short line in the imperative mood.
+
+Always use 4 spaces for indentation in all code files. Never use 2 spaces.
+
+Document methods you wrote using JSDoc (Node JS) or docstrings (Python) convention.
