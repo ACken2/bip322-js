@@ -75,6 +75,9 @@ const toSpendTxId = toSpend.getId();
 assert(/^[0-9a-f]{64}$/.test(toSpendTxId), 'toSpend.getId() did not return a 64-character hex string');
 const toSign = BIP322.buildToSignTx(toSpendTxId, scriptPubKey);
 assert(toSign, 'BIP322.buildToSignTx did not return a PSBT');
+
+console.log('Verified P2WPKH, testnet, regtest, P2TR, and P2SH-P2WPKH signatures.');
+console.log('toSpend txid ' + toSpendTxId);
 `;
 
 /**
@@ -89,7 +92,10 @@ function runReadmeExample(tarballPath) {
         run('npm', ['install', tarballPath], { cwd: consumerDir });
         const consumerPath = path.join(consumerDir, 'readme-example.js');
         fs.writeFileSync(consumerPath, consumerSource);
-        run('node', [consumerPath], { cwd: consumerDir });
+        const result = run('node', [consumerPath], { cwd: consumerDir });
+        if (result.stdout) {
+            process.stdout.write(result.stdout);
+        }
     }
     finally {
         fs.rmSync(consumerDir, { recursive: true, force: true });
@@ -98,8 +104,12 @@ function runReadmeExample(tarballPath) {
 
 let tarballPath;
 try {
+    console.log('Packing bip322-js...');
     tarballPath = packTarball();
+    console.log(`Packed ${path.basename(tarballPath)}`);
+    console.log('Installing tarball in a temp directory...');
     runReadmeExample(tarballPath);
+    console.log('README example passed.');
 }
 finally {
     if (tarballPath) {
