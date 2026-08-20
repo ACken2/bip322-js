@@ -1,12 +1,16 @@
 // Import dependencies
 import { expect, use } from 'chai';
 import chaibytes from "chai-bytes";
-import ECPairFactory from 'ecpair';
+import { ECPairFactory } from 'ecpair';
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
 
 // Import module to be tested
 import { Address } from '../../src';
+import { BufferUtil } from '../../src/helpers';
+import { withReplacedProperty } from './ReplaceProperty';
+
+const bitcoinPayments = require('bitcoinjs-lib').payments as typeof import('bitcoinjs-lib').payments;
 
 describe('Address Test', () => {
 
@@ -389,6 +393,22 @@ describe('Address Test', () => {
             expect(p2trMainnetConverted).to.equalBytes(p2trMainnetScriptPubKey);
             expect(p2trTestnetConverted).to.equalBytes(p2trTestnetScriptPubKey);
             expect(p2trRegtestConverted).to.equalBytes(p2trRegtestScriptPubKey);
+            expect(Buffer.isBuffer(p2pkhMainnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2pkhTestnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2pkhTestnetIIConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2pkhRegtestConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2shMainnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2shTestnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2shRegtestConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wpkhMainnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wpkhTestnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wpkhRegtestConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wshMainnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wshTestnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2wshRegtestConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2trMainnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2trTestnetConverted)).to.be.true;
+            expect(Buffer.isBuffer(p2trRegtestConverted)).to.be.true;
         });
 
         it('Throw when handling invalid address', () => {
@@ -447,6 +467,15 @@ describe('Address Test', () => {
             expect(p2wtfMalformedResult).to.throws('Unknown address type');
         });
 
+        it('Throw when a bitcoinjs-lib P2PKH payment has no output', () => {
+            const address = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
+            withReplacedProperty(bitcoinPayments, 'p2pkh', () => {
+                return { output: undefined };
+            }, () => {
+                expect(Address.convertAdressToScriptPubkey.bind(Address, address)).to.throw('Unknown address type');
+            });
+        });
+
     });
 
     describe('Public Key to Addres Function', () => {
@@ -457,7 +486,7 @@ describe('Address Test', () => {
             const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
             const ECPair = ECPairFactory(ecc);
             const signer = ECPair.fromWIF(privateKey);
-            const publicKey = signer.publicKey;
+            const publicKey = BufferUtil.ensureBuffer(signer.publicKey);
             // Expected address for the private key L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k
             const p2pkhAddress = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
             const p2pkhAddressTestnet = 'mjSSLdHFzft9NC5NNMik7WrMQ9rRhMhNpT';
@@ -477,7 +506,7 @@ describe('Address Test', () => {
             const p2shAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2sh-p2wpkh');
             const p2wpkhAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2wpkh');
             const p2trAddressGenerated = Address.convertPubKeyIntoAddress(publicKey, 'p2tr');
-            const p2trAddressGeneratedInternalPubKey = Address.convertPubKeyIntoAddress(publicKey.subarray(1, 33), 'p2tr');
+            const p2trAddressGeneratedInternalPubKey = Address.convertPubKeyIntoAddress(BufferUtil.ensureBuffer(publicKey.subarray(1, 33)), 'p2tr');
 
             // Assert
             expect(p2pkhAddressGenerated.mainnet).to.equal(p2pkhAddress);
@@ -503,7 +532,7 @@ describe('Address Test', () => {
             const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
             const ECPair = ECPairFactory(ecc);
             const signer = ECPair.fromWIF(privateKey);
-            const publicKey = signer.publicKey;
+            const publicKey = BufferUtil.ensureBuffer(signer.publicKey);
 
             // Act
             // @ts-ignore
