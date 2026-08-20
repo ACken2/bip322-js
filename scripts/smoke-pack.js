@@ -81,6 +81,47 @@ console.log('toSpend txid ' + toSpendTxId);
 `;
 
 /**
+ * Assert that the installed package declares existing main and types files
+ * and does not contain stale dist/src or dist/test output.
+ *
+ * @param {string} consumerDir Temporary directory that installed the tarball
+ */
+function assertInstalledPackageLayout(consumerDir) {
+    const packageDir = path.join(consumerDir, 'node_modules', 'bip322-js');
+    const packageJson = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
+    if (!packageJson.main) {
+        throw new Error('Installed package.json is missing a main field.');
+    }
+    if (!packageJson.types) {
+        throw new Error('Installed package.json is missing a types field.');
+    }
+
+    const mainPath = path.resolve(packageDir, packageJson.main);
+    const typesPath = path.resolve(packageDir, packageJson.types);
+    if (!fs.existsSync(mainPath) || !fs.statSync(mainPath).isFile()) {
+        throw new Error(`Installed package main entry does not exist: ${packageJson.main}`);
+    }
+    if (!fs.existsSync(typesPath) || !fs.statSync(typesPath).isFile()) {
+        throw new Error(`Installed package types entry does not exist: ${packageJson.types}`);
+    }
+
+    const stalePaths = ['dist/src', 'dist/test']
+        .map((relativePath) => path.join(packageDir, relativePath))
+        .filter((stalePath) => fs.existsSync(stalePath));
+    if (stalePaths.length > 0) {
+        const staleList = stalePaths
+            .map((stalePath) => path.relative(packageDir, stalePath))
+            .join(', ');
+        throw new Error(
+            `Installed package contains stale output (${staleList}). ` +
+            'Remove leftover files under dist/ and rebuild before packing.'
+        );
+    }
+
+    console.log(`Verified package entries ${packageJson.main} and ${packageJson.types}.`);
+}
+
+/**
  * Install the packed tarball in a temp directory and run the README example.
  *
  * @param {string} tarballPath Absolute path to the packed tarball
@@ -90,6 +131,7 @@ function runReadmeExample(tarballPath) {
     try {
         run('npm', ['init', '-y'], { cwd: consumerDir });
         run('npm', ['install', tarballPath], { cwd: consumerDir });
+        assertInstalledPackageLayout(consumerDir);
         const consumerPath = path.join(consumerDir, 'readme-example.js');
         fs.writeFileSync(consumerPath, consumerSource);
         const result = run('node', [consumerPath], { cwd: consumerDir });
