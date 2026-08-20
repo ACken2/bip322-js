@@ -7,7 +7,11 @@ import * as crypto from 'crypto';
 import Key from '../../src/helpers/Key';
 import VarInt from '../../src/helpers/VarInt';
 import { BitcoinMessage } from '../../src';
+import { BufferUtil } from '../../src/helpers';
 import * as bitcoinMessage from 'bitcoinjs-message'; // Reference implementation
+import { withReplacedProperty } from './ReplaceProperty';
+
+const bitcoinPayments = require('bitcoinjs-lib').payments as typeof import('bitcoinjs-lib').payments;
 
 // Setup Chai
 chai.use(chaibytes);
@@ -25,8 +29,8 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
     const messages = [message, Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])];
     const privateKeyWIF = "L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"; // Compressed
     const keyPair = ECPair.fromWIF(privateKeyWIF);
-    const privateKey = keyPair.privateKey!;
-    const publicKey = keyPair.publicKey;
+    const privateKey = BufferUtil.ensureBuffer(keyPair.privateKey!);
+    const publicKey = BufferUtil.ensureBuffer(keyPair.publicKey);
     
     const keyPairUncompressed = ECPair.fromPrivateKey(privateKey, { compressed: false });
     const publicKeyUncompressed = keyPairUncompressed.publicKey;
@@ -97,6 +101,7 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
 
                     // Check 1: Byte-for-byte equality (using chai-bytes logic)
                     // Since both use RFC6979 deterministic k, outputs must be identical.
+                    expect(Buffer.isBuffer(sigNew)).to.be.true;
                     expect(sigNew).to.equalBytes(sigRef);
 
                     // Check 2: Reference library verifies our signature
@@ -128,6 +133,22 @@ describe('BitcoinMessage.sign and BitcoinMessage.verify Compatibility Test Suite
         
         const isValid = BitcoinMessage.verify("Wrong Message", address, signature.toString('base64'));
         expect(isValid).to.be.false;
+    });
+
+    it('should fail if a derived payment has no output', () => {
+        const address = bitcoin.payments.p2pkh({ pubkey: publicKey }).address!;
+        const signature = BitcoinMessage.sign(message, privateKey, true);
+        const originalP2pkh = bitcoinPayments.p2pkh;
+
+        withReplacedProperty(bitcoinPayments, 'p2pkh', (payment: Parameters<typeof originalP2pkh>[0]) => {
+            if (payment.pubkey) {
+                return { output: undefined };
+            }
+            return originalP2pkh(payment);
+        }, () => {
+            const isValid = BitcoinMessage.verify(message, address, signature.toString('base64'));
+            expect(isValid).to.be.false;
+        });
     });
 
     // -------------------------------------------------------------------------

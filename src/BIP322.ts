@@ -1,6 +1,7 @@
 // Import dependencies
 import { Hash } from "fast-sha256";
 import * as bitcoin from 'bitcoinjs-lib';
+import BufferUtil from './helpers/BufferUtil';
 
 /**
  * Class that handles BIP-322 related operations.
@@ -60,7 +61,7 @@ class BIP322 {
         });
         // Set the output
         psbt.addOutput({
-            value: 0, // vout[0].nValue = 0
+            value: 0n, // vout[0].nValue = 0
             script: scriptPublicKey // vout[0].scriptPubKey = message_challenge
         });
         // Return transaction
@@ -88,7 +89,7 @@ class BIP322 {
             sequence: 0, // vin[0].nSequence = 0
             witnessUtxo: {
                 script: witnessScript,
-                value: 0
+                value: 0n
             }
         });
         // Set redeemScript as witnessScript if isRedeemScript
@@ -105,7 +106,7 @@ class BIP322 {
         }
         // Set the output
         psbt.addOutput({
-            value: 0, // vout[0].nValue = 0
+            value: 0n, // vout[0].nValue = 0
             script: Buffer.from([0x6a]) // vout[0].scriptPubKey = OP_RETURN
         });
         return psbt;
@@ -122,7 +123,7 @@ class BIP322 {
         // Check if the witness data is present
         if (witness) {
             // Return the base-64 encoded witness stack
-            return witness.toString('base64');
+            return BufferUtil.ensureBuffer(witness).toString('base64');
         }
         else {
             throw new Error('Cannot encode empty witness stack.');

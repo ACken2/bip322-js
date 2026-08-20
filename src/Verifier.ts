@@ -47,11 +47,11 @@ class Verifier {
         if (Address.isP2WPKHWitness(witness)) {
             // For non-taproot segwit transaciton, public key is included as the second part of the witness data
             const publicKey = witness[1];
-            const { signature } = decodeScriptSignature(encodedSignature);
+            const { signature } = decodeScriptSignature(BufferUtil.ensureBuffer(encodedSignature));
             // Compute OP_HASH160(publicKey)
             const hashedPubkey = bitcoin.crypto.hash160(publicKey);
             // Common path variable
-            let hashToSign: Buffer; // Hash expected to be signed by the signing address
+            let hashToSign: Uint8Array; // Hash expected to be signed by the signing address
             if (Address.isP2SH(signerAddress)) {
                 // P2SH-P2WPKH verification path
                 // Compute the hash that correspond to the toSignTx
@@ -90,8 +90,8 @@ class Verifier {
             const publicKey = BufferUtil.ensureBuffer(scriptPubKey.subarray(2));
             // Compute the hash to be signed by the signing address
             // Reference: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#user-content-Taproot_key_path_spending_signature_validation
-            let hashToSign: Buffer;
-            let signature: Buffer;
+            let hashToSign: Uint8Array;
+            let signature: Uint8Array;
             if (encodedSignature.byteLength === 64) {
                 // If a BIP-341 signature is 64 bytes, the signature is signed using SIGHASH_DEFAULT 0x00 
                 hashToSign = this.getHashForSigP2TR(toSignTx, 0x00);
@@ -247,11 +247,14 @@ class Verifier {
         const signingScript = bitcoin.payments.p2pkh({ 
             hash: BufferUtil.ensureBuffer(toSignTx.data.inputs[0].witnessUtxo.script.subarray(2))
         }).output;
+        if (!signingScript) {
+            throw new Error('Unable to derive signing script for P2WPKH input.');
+        }
         // Return computed transaction hash to be signed 
         return toSignTx.extractTransaction().hashForWitnessV0(
             0,
             signingScript,
-            0,
+            0n,
             bitcoin.Transaction.SIGHASH_ALL
         );
     }
@@ -262,7 +265,7 @@ class Verifier {
      * @param hashedPubkey Hashed public key of the signing address
      * @returns Computed transaction hash that requires signing
      */
-    private static getHashForSigP2SHInP2WPKH(toSignTx: bitcoin.Psbt, hashedPubkey: Buffer) {
+    private static getHashForSigP2SHInP2WPKH(toSignTx: bitcoin.Psbt, hashedPubkey: Uint8Array) {
         // Create a signing script to unlock the P2WPKH output based on the P2PKH template
         // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/ts_src/psbt.ts#L1654
         // Like P2WPKH, the hash for deriving the meaningfulScript for a P2SH-P2WPKH transaction is its public key hash
@@ -270,11 +273,14 @@ class Verifier {
         const signingScript = bitcoin.payments.p2pkh({ 
             hash: hashedPubkey
         }).output;
+        if (!signingScript) {
+            throw new Error('Unable to derive signing script for P2SH-P2WPKH input.');
+        }
         // Return computed transaction hash to be signed 
         return toSignTx.extractTransaction().hashForWitnessV0(
             0,
             signingScript,
-            0,
+            0n,
             bitcoin.Transaction.SIGHASH_ALL
         );
     }
@@ -297,7 +303,7 @@ class Verifier {
         return toSignTx.extractTransaction().hashForWitnessV1(
             0,
             [toSignTx.data.inputs[0].witnessUtxo.script],
-            [0],
+            [0n],
             hashType
         );
     }

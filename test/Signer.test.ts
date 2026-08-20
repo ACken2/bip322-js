@@ -1,6 +1,11 @@
 // Import dependencies
 import { expect } from 'chai';
 import * as bitcoinMessage from 'bitcoinjs-message';
+import ecc from '@bitcoinerlab/secp256k1';
+import { withReplacedProperty } from './helpers/ReplaceProperty';
+
+const ecpairModule = require('ecpair') as typeof import('ecpair');
+const bitcoinPayments = require('bitcoinjs-lib').payments as typeof import('bitcoinjs-lib').payments;
 
 // Import module to be tested
 import { Signer, Verifier } from '../src';
@@ -188,6 +193,50 @@ describe('Signer Test', () => {
         expect(signatureP2SH).to.equal(nestedSegwitExpectedSignature);
         expect(segwitExpectedSignature).to.equal(signatureP2WPKH);
         expect(Verifier.verifySignature(taprootAddress, message, signatureP2TR)).to.be.true; // We can no longer expect constant signature
+    });
+
+    it('Throw when a matching P2PKH keypair has no private key', () => {
+        const privateKey = 'L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k';
+        const address = '14vV3aCHBeStb5bkenkNHbe2YAFinYdXgc';
+        const message = 'Hello World';
+        const originalFactory = ecpairModule.ECPairFactory;
+        const realSigner = originalFactory(ecc).fromWIF(privateKey);
+
+        withReplacedProperty(ecpairModule, 'ECPairFactory', () => {
+            return {
+                fromWIF: () => {
+                    return {
+                        publicKey: realSigner.publicKey,
+                        compressed: realSigner.compressed,
+                        get privateKey() {
+                            return undefined;
+                        }
+                    };
+                }
+            };
+        }, () => {
+            expect(Signer.sign.bind(Signer, privateKey, address, message)).to.throw(
+                `Invalid private key provided for signing message for ${address}.`
+            );
+        });
+    });
+
+    it('Throw when a P2SH-P2WPKH redeem script cannot be derived', () => {
+        const privateKey = 'KwTbAxmBXjoZM3bzbXixEr9nxLhyYSM4vp2swet58i19bw9sqk5z';
+        const address = '3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f';
+        const message = 'Hello World';
+        const originalP2wpkh = bitcoinPayments.p2wpkh;
+
+        withReplacedProperty(bitcoinPayments, 'p2wpkh', (payment: Parameters<typeof originalP2wpkh>[0]) => {
+            if (payment.hash) {
+                return { output: undefined };
+            }
+            return originalP2wpkh(payment);
+        }, () => {
+            expect(Signer.sign.bind(Signer, privateKey, address, message)).to.throw(
+                `Unable to derive redeem script for ${address}.`
+            );
+        });
     });
 
 });

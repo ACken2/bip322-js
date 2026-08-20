@@ -1,5 +1,6 @@
 import BIP137 from './BIP137';
 import VarInt from './VarInt';
+import BufferUtil from './BufferUtil';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { payments, address as bjsAddress, networks } from 'bitcoinjs-lib';
@@ -148,25 +149,28 @@ class BitcoinMessage {
         if (!targetScript) return false; // Address was invalid on all networks
 
         // 4. Derive the Expected Output Script from the Recovered Key
-        let payment: any;
+        let paymentOutput: Uint8Array | undefined;
         
         if (type === 'p2wpkh') {
-            payment = payments.p2wpkh({ pubkey: pubKey });
+            paymentOutput = payments.p2wpkh({ pubkey: pubKey }).output;
         } 
         else if (type === 'p2sh(p2wpkh)') {
-            payment = payments.p2sh({ 
+            paymentOutput = payments.p2sh({
                 redeem: payments.p2wpkh({ pubkey: pubKey }) 
-            });
+            }).output;
         } 
         else {
             // Assumed p2pkh
             // It automatically infers either a P2PKH Compressed or P2PKH Uncompressed 
             // based on the flag presented on the signature
-            payment = payments.p2pkh({ pubkey: pubKey });
+            paymentOutput = payments.p2pkh({ pubkey: pubKey }).output;
         }
 
         // 5. Compare the Scripts
-        return payment.output.equals(targetScript);
+        if (!paymentOutput) {
+            return false;
+        }
+        return BufferUtil.ensureBuffer(paymentOutput).equals(targetScript);
     }
 
     /**
@@ -205,7 +209,7 @@ class BitcoinMessage {
         const candidates = [networks.bitcoin, networks.testnet, networks.regtest];
         for (const network of candidates) {
             try {
-                return bjsAddress.toOutputScript(address, network);
+                return BufferUtil.ensureBuffer(bjsAddress.toOutputScript(address, network));
             } 
             catch (e) {
                 // Continue to next network if this one mismatches

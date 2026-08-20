@@ -1,5 +1,6 @@
 // Import dependency
 import Key from "./Key";
+import BufferUtil from "./BufferUtil";
 import * as bitcoin from 'bitcoinjs-lib';
 
 /**
@@ -80,7 +81,7 @@ class Address {
      * @param witness Witness data associated with the toSign BIP-322 transaction
      * @returns True if the provided witness stack correspond to a valid P2WPKH address, false if otherwise
      */
-    public static isP2WPKHWitness(witness: Buffer[]) {
+    public static isP2WPKHWitness(witness: readonly Uint8Array[]) {
         // Check whether the witness stack is as expected for a P2WPKH address
         // It should contain exactly two items, with the second item being a public key with 33 bytes, and the first byte must be either 0x02/0x03
         if (witness.length === 2 && witness[1].byteLength === 33 && (witness[1][0] === 0x02 || witness[1][0] === 0x03)) {
@@ -96,7 +97,7 @@ class Address {
      * @param witness Witness data associated with the toSign BIP-322 transaction
      * @returns True if the provided address and witness stack correspond to a valid single-key-spend P2TR address, false if otherwise
      */
-    public static isSingleKeyP2TRWitness(witness: Buffer[]) {
+    public static isSingleKeyP2TRWitness(witness: readonly Uint8Array[]) {
         // Check whether the witness stack is as expected for a single-key-spend taproot address
         // It should contain exactly one items which is the signature for the transaction
         if (witness.length === 1) {
@@ -140,42 +141,42 @@ class Address {
     public static convertAdressToScriptPubkey(address: string) {
         if (address[0] === '1' || address[0] === 'm' || address[0] === 'n') {
             // P2PKH address
-            return bitcoin.payments.p2pkh({
+            return this.requirePaymentOutput(bitcoin.payments.p2pkh({
                 address: address,
                 network: this.getNetworkFromAddess(address)
-            }).output as Buffer;
+            }).output);
         }
         else if (address[0] === '3' || address[0] === '2') {
             // P2SH address
-            return bitcoin.payments.p2sh({
+            return this.requirePaymentOutput(bitcoin.payments.p2sh({
                 address: address,
                 network: this.getNetworkFromAddess(address)
-            }).output as Buffer;
+            }).output);
         }
         else if (/^(bc1q|tb1q|bcrt1q)/.test(address)) {
             // P2WPKH or P2WSH address
             if (address.length === 42 || (address.includes('bcrt1q') && address.length === 44)) {
                 // P2WPKH address
-                return bitcoin.payments.p2wpkh({
+                return this.requirePaymentOutput(bitcoin.payments.p2wpkh({
                     address: address,
                     network: this.getNetworkFromAddess(address)
-                }).output as Buffer;
+                }).output);
             }
             else if (address.length === 62 || (address.includes('bcrt1q') && address.length === 64)) {
                 // P2WSH address
-                return bitcoin.payments.p2wsh({
+                return this.requirePaymentOutput(bitcoin.payments.p2wsh({
                     address: address,
                     network: this.getNetworkFromAddess(address)
-                }).output as Buffer;
+                }).output);
             }
         }
         else if (/^(bc1p|tb1p|bcrt1p)/.test(address)) {
             if (address.length === 62 || (address.includes('bcrt1p') && address.length === 64)) {
                 // P2TR address
-                return bitcoin.payments.p2tr({
+                return this.requirePaymentOutput(bitcoin.payments.p2tr({
                     address: address,
                     network: this.getNetworkFromAddess(address)
-                }).output as Buffer;
+                }).output);
             }
         }
         throw new Error("Unknown address type");
@@ -272,6 +273,21 @@ class Address {
         }
         catch (error) { }
         return false; // Probably not a valid address
+    }
+
+    /**
+     * Convert a bitcoinjs-lib payment output into a Buffer.
+     * bitcoinjs-lib v7 returns Uint8Array | undefined for payment outputs.
+     *
+     * @param output Payment output produced by bitcoinjs-lib
+     * @returns Buffer containing the script public key
+     * @throws If the payment output is missing
+     */
+    private static requirePaymentOutput(output: Uint8Array | undefined): Buffer {
+        if (!output) {
+            throw new Error("Unknown address type");
+        }
+        return BufferUtil.ensureBuffer(output);
     }
 
 }
