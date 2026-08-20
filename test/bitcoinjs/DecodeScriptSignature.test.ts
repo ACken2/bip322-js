@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 
 // Import test data
-import * as fixtures from './signature.json';
+import fixtures from './signature.json' with { type: 'json' };
 
 // Import module to be tested
 import { decodeScriptSignature } from '../../src/bitcoinjs';
