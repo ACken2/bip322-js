@@ -6,6 +6,7 @@
         "target": "ES2020",
         "sourceMap": true,
         "outDir": "dist",
+        "rootDir": "src",
         "declaration": true,
         "baseUrl": ".",
         "paths": {
@@ -17,7 +18,7 @@
     },
     "exclude": [
         "node_modules",
-        "**/*.test.ts",
+        "test",
         "dist"
     ]
 }
