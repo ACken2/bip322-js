@@ -9,7 +9,8 @@
         "doc": "typedoc src/index.ts",
         "prepack": "npm run build",
         "test": "ts-mocha 'test/**/*.test.ts'",
-        "test:coverage": "nyc --reporter=text --reporter=text-summary --reporter=lcov npm test"
+        "test:coverage": "nyc --reporter=text --reporter=text-summary --reporter=lcov npm test",
+        "test:pack": "node scripts/smoke-pack.js"
     },
     "keywords": [
         "bip322",
