@@ -155,7 +155,7 @@ class BitcoinMessage {
             paymentOutput = payments.p2wpkh({ pubkey: pubKey }).output;
         } 
         else if (type === 'p2sh(p2wpkh)') {
-            paymentOutput = payments.p2sh({ 
+            paymentOutput = payments.p2sh({
                 redeem: payments.p2wpkh({ pubkey: pubKey }) 
             }).output;
         } 
