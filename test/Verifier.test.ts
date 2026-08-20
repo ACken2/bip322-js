@@ -1,13 +1,29 @@
 // Import dependencies
 import { expect } from 'chai';
 import BIP322 from "../src/BIP322";
-import ECPairFactory from 'ecpair';
-import { Witness } from '../src/helpers';
+import { ECPairFactory } from 'ecpair';
+import { BufferUtil, Witness } from '../src/helpers';
 import * as bitcoin from 'bitcoinjs-lib';
 import ecc from '@bitcoinerlab/secp256k1';
+import { withReplacedProperty } from './helpers/ReplaceProperty';
+
+const bitcoinPayments = require('bitcoinjs-lib').payments as typeof import('bitcoinjs-lib').payments;
 
 // Import module to be tested
-import { Verifier } from '../src';
+import { Signer, Verifier } from '../src';
+
+/**
+ * Convert a bitcoinjs-lib payment output into a Buffer.
+ *
+ * @param output Payment output produced by bitcoinjs-lib
+ * @returns Buffer containing the script public key
+ */
+function requirePaymentOutput(output: Uint8Array | undefined): Buffer {
+    if (!output) {
+        throw new Error('Expected payment output');
+    }
+    return BufferUtil.ensureBuffer(output);
+}
 
 /**
  * Given a valid BIP-137 signature, generate compatible valid signatures with different header flag.
@@ -213,13 +229,13 @@ describe('Verifier Test', () => {
         const ECPair = ECPairFactory(ecc);
         const testPrivateKey = ECPair.fromWIF(privateKey);
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2sh({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2sh({
 			address: address
-		}).output as Buffer;
+		}).output);
         // Derive the P2SH-P2WPKH redeemScript from the corresponding hashed public key
-        const redeemScript = bitcoin.payments.p2wpkh({
+        const redeemScript = requirePaymentOutput(bitcoin.payments.p2wpkh({
 			hash: bitcoin.crypto.hash160(testPrivateKey.publicKey)
-		}).output as Buffer;
+		}).output);
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft a toSign transaction that spends toSpend transaction
@@ -369,16 +385,16 @@ describe('Verifier Test', () => {
         const ECPair = ECPairFactory(ecc);
         const testPrivateKey = ECPair.fromWIF(privateKey);
         // Extract the taproot internal public key
-        const internalPublicKey = testPrivateKey.publicKey.subarray(1, 33);
+        const internalPublicKey = BufferUtil.ensureBuffer(testPrivateKey.publicKey.subarray(1, 33));
         // Tweak the private key for signing, since the output and address uses tweaked key
         // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
         const testPrivateKeyTweaked = testPrivateKey.tweak(
             bitcoin.crypto.taggedHash('TapTweak', testPrivateKey.publicKey.subarray(1, 33))
         );
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2tr({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2tr({
 			address: address
-		}).output as Buffer;
+		}).output);
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft a toSign transaction that spends toSpend transaction
@@ -500,16 +516,16 @@ describe('Verifier Test', () => {
         const ECPair = ECPairFactory(ecc);
         const testPrivateKey = ECPair.fromWIF(privateKey);
         // Extract the taproot internal public key
-        const internalPublicKey = testPrivateKey.publicKey.subarray(1, 33);
+        const internalPublicKey = BufferUtil.ensureBuffer(testPrivateKey.publicKey.subarray(1, 33));
         // Tweak the private key for signing, since the output and address uses tweaked key
         // Reference: https://github.com/bitcoinjs/bitcoinjs-lib/blob/1a9119b53bcea4b83a6aa8b948f0e6370209b1b4/test/integration/taproot.spec.ts#L55
         const testPrivateKeyTweaked = testPrivateKey.tweak(
             bitcoin.crypto.taggedHash('TapTweak', testPrivateKey.publicKey.subarray(1, 33))
         );
         // Obtain the script public key
-        const scriptPubKey = bitcoin.payments.p2tr({
+        const scriptPubKey = requirePaymentOutput(bitcoin.payments.p2tr({
 			address: address
-		}).output as Buffer;
+		}).output);
         // Draft a toSpend transaction with messageHelloWorld
         const toSpendTx = BIP322.buildToSpendTx(messageHelloWorld, scriptPubKey);
         // Draft, sign the toSign transaction, and extract the signature using different SIGHASH
@@ -714,6 +730,35 @@ describe('Verifier Test', () => {
         expect(() => {
             Verifier.verifySignature(p2pkhAddress, ({ whoami: 'def only a string/buffer' } as any), p2pkhExpectedSignature)
         }).to.throw(); // Will throw instead if not using useStrictVerification
+    });
+
+    it('Throw when a P2WPKH signing script cannot be derived', () => {
+        const address = 'bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l';
+        const message = 'Hello World';
+        const signature = 'AkcwRAIgZRfIY3p7/DoVTty6YZbWS71bc5Vct9p9Fia83eRmw2QCICK/ENGfwLtptFluMGs2KsqoNSk89pO7F29zJLUx9a/sASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=';
+
+        withReplacedProperty(bitcoinPayments, 'p2pkh', () => {
+            return { output: undefined };
+        }, () => {
+            expect(Verifier.verifySignature.bind(Verifier, address, message, signature)).to.throw(
+                'Unable to derive signing script for P2WPKH input.'
+            );
+        });
+    });
+
+    it('Throw when a P2SH-P2WPKH signing script cannot be derived', () => {
+        const privateKey = 'KwTbAxmBXjoZM3bzbXixEr9nxLhyYSM4vp2swet58i19bw9sqk5z';
+        const address = '3HSVzEhCFuH9Z3wvoWTexy7BMVVp3PjS6f';
+        const message = 'Hello World';
+        const signature = Signer.sign(privateKey, address, message);
+
+        withReplacedProperty(bitcoinPayments, 'p2pkh', () => {
+            return { output: undefined };
+        }, () => {
+            expect(Verifier.verifySignature.bind(Verifier, address, message, signature)).to.throw(
+                'Unable to derive signing script for P2SH-P2WPKH input.'
+            );
+        });
     });
 
 });
