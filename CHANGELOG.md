@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking**: Upgraded `bitcoinjs-lib` from 6.x to 7.x and `ecpair` from 2.x to 3.x. These libraries now use `bigint` for transaction amounts and `Uint8Array` for binary fields on `Transaction` and `Psbt` objects returned by `BIP322.buildToSpendTx` and `BIP322.buildToSignTx`. Package-owned helpers such as `Address.convertAdressToScriptPubkey` and `BitcoinMessage.sign` still return Node.js `Buffer`. High-level `Signer.sign` / `Verifier.verifySignature` APIs remain Base64 strings. Buffer inputs continue to be accepted where they were accepted before.
+
 ## [3.0.0] - 2025-04-27
 
 ### Fixed

@@ -123,3 +123,13 @@ This option has been removed, as the network is now automatically inferred from 
 1. If your code depended on receiving a Buffer from `Signer.sign` for P2PKH addresses, you must update it to handle the returned Base64-encoded string instead.
 
 2. Signature Handling: Version 1.2.0 of the underlying `@bitcoinerlab/secp256k1` library introduced a change to signSchnorr. It now incorporates secure random data (auxRand) by default during Schnorr signature generation (used in BIP-322), whereas previous versions might have produced deterministic outputs under certain conditions. This means signing the same message with the same key will now yield different, but equally valid, signature bytes each time.
+
+### From v3.X
+
+This library now depends on `bitcoinjs-lib` 7 and `ecpair` 3.
+
+1. If you use `BIP322.buildToSpendTx` or `BIP322.buildToSignTx` and inspect the returned `bitcoin.Transaction` / `bitcoin.Psbt` objects, treat amounts as `bigint` (`value: 0n`, not `value: 0`) and treat binary fields (`script`, `witness`, keys) as `Uint8Array`.
+
+2. Package-owned helpers such as `Address.convertAdressToScriptPubkey` and `BitcoinMessage.sign` still return Node.js `Buffer`. High-level `Signer.sign` and `Verifier.verifySignature` still accept strings/`Buffer` messages and return or consume Base64 signature strings.
+
+3. Buffer inputs remain accepted where they were accepted before. You do not need to convert caller-owned Buffers to `Uint8Array` before passing them into this library.
