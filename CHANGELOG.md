@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-08-21
+
+### Added
+
+- Added and exported a `BitcoinMessage` helper as a drop-in replacement for `bitcoinjs-message`.
+- Declared `engines.node` of `>=20.19.0`, required by `@noble/curves` and `@noble/hashes` 2.x.
+- Added a published-tarball smoke test (`npm run test:pack`) to CI.
+
 ### Changed
 
 - **Breaking**: Upgraded `bitcoinjs-lib` from 6.x to 7.x and `ecpair` from 2.x to 3.x. These libraries now use `bigint` for transaction amounts and `Uint8Array` for binary fields on `Transaction` and `Psbt` objects returned by `BIP322.buildToSpendTx` and `BIP322.buildToSignTx`. Package-owned helpers such as `Address.convertAdressToScriptPubkey` and `BitcoinMessage.sign` still return Node.js `Buffer`. High-level `Signer.sign` / `Verifier.verifySignature` APIs remain Base64 strings. Buffer inputs continue to be accepted where they were accepted before.
+- **Breaking**: Raised the TypeScript compile target from `es6` to `ES2020`.
+- Replaced runtime dependencies `elliptic` and `secp256k1` with `@noble/curves` and `@noble/hashes`. `bitcoinjs-message` is no longer a runtime dependency.
+- Updated unit-test CI to Node.js 20.19.0 (minimum supported), 22 (Maintenance LTS), 24 (Active LTS), and 26 (Current).
+- Updated other dependencies.
+
+### Fixed
+
+- Set TypeScript `rootDir` to `src` so test files are no longer emitted into the published `dist/` package.
 
 ## [3.0.0] - 2025-04-27
 

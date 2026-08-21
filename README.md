@@ -133,3 +133,9 @@ This library now depends on `bitcoinjs-lib` 7 and `ecpair` 3.
 2. Package-owned helpers such as `Address.convertAdressToScriptPubkey` and `BitcoinMessage.sign` still return Node.js `Buffer`. High-level `Signer.sign` and `Verifier.verifySignature` still accept strings/`Buffer` messages and return or consume Base64 signature strings.
 
 3. Buffer inputs remain accepted where they were accepted before. You do not need to convert caller-owned Buffers to `Uint8Array` before passing them into this library.
+
+4. The package now declares `engines.node` of `>=20.19.0`, required by `@noble/curves` and `@noble/hashes` 2.x. `ecpair` 3 also requires Node.js 20 or later. Node.js 18 and earlier are unsupported.
+
+5. Compiled JavaScript now targets ES2020 (for example, `0n` bigint literals). Downstream TypeScript projects targeting an older `lib`/`target` may need to bump those settings.
+
+6. Do not rely on `elliptic`, `secp256k1`, or `bitcoinjs-message` being installed via this package. They are no longer runtime dependencies. If you previously used `bitcoinjs-message` through this library, use the exported `BitcoinMessage` helper instead.
