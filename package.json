@@ -35,7 +35,7 @@
         "bitcoinjs-message": "^2.2.0",
         "chai": "^4.5.0",
         "chai-bytes": "^0.1.2",
-        "mocha": "^11.8.0",
+        "mocha": "^12.0.0",
         "nyc": "^18.0.0",
         "ts-mocha": "^11.1.0",
         "ts-node": "^10.9.2",
