@@ -33,17 +33,17 @@ class BIP322 {
     }
 
     /**
-     * Build a to_spend transaction using simple signature in accordance to the BIP-322.
+     * Build a to_spend transaction in accordance with BIP-322.
+     * The transaction is constructed directly. Its prevout does not exist, so it cannot be built through PSBT extraction.
      * @param message Message to be signed using BIP-322
      * @param scriptPublicKey The script public key for the signing wallet
-     * @returns Bitcoin transaction that correspond to the to_spend transaction
+     * @returns The to_spend transaction, with version 0, locktime 0, and an empty witness
      */
-    public static buildToSpendTx(message: string | Buffer, scriptPublicKey: Buffer) {
-        // Create PSBT object for constructing the transaction
-        const psbt = new bitcoin.Psbt();
-        // Set default value for nVersion and nLockTime
-        psbt.setVersion(0); // nVersion = 0
-        psbt.setLocktime(0); // nLockTime = 0
+    public static buildToSpendTx(message: string | Buffer, scriptPublicKey: Buffer): bitcoin.Transaction {
+        // Construct the transaction directly. nVersion defaults to 1, so set it explicitly.
+        const tx = new bitcoin.Transaction();
+        tx.version = 0; // nVersion = 0
+        tx.locktime = 0; // nLockTime = 0
         // Compute the message hash - SHA256(SHA256(tag) || SHA256(tag) || message)
         const messageHash = this.hashMessage(message);
         // Construct the scriptSig - OP_0 PUSH32[ message_hash ]
@@ -51,21 +51,13 @@ class BIP322 {
         const scriptSig = new Uint8Array(scriptSigPartOne.length + messageHash.length);
         scriptSig.set(scriptSigPartOne);
         scriptSig.set(messageHash, scriptSigPartOne.length);
-        // Set the input
-        psbt.addInput({
-            hash: '0'.repeat(64), // vin[0].prevout.hash = 0000...000
-            index: 0xFFFFFFFF, // vin[0].prevout.n = 0xFFFFFFFF
-            sequence: 0, // vin[0].nSequence = 0
-            finalScriptSig: Buffer.from(scriptSig), // vin[0].scriptSig = OP_0 PUSH32[ message_hash ]
-            witnessScript: Buffer.from([]) // vin[0].scriptWitness = []
-        });
-        // Set the output
-        psbt.addOutput({
-            value: 0n, // vout[0].nValue = 0
-            script: scriptPublicKey // vout[0].scriptPubKey = message_challenge
-        });
-        // Return transaction
-        return psbt.extractTransaction();
+        // vin[0].prevout.hash = 0000...000, vin[0].prevout.n = 0xFFFFFFFF, vin[0].nSequence = 0
+        // Sequence must be passed because addInput defaults it to 0xFFFFFFFF.
+        // The witness stays empty, so the transaction serializes without a witness.
+        tx.addInput(new Uint8Array(32), 0xFFFFFFFF, 0, scriptSig);
+        // vout[0].nValue = 0, vout[0].scriptPubKey = message_challenge
+        tx.addOutput(scriptPublicKey, 0n);
+        return tx;
     }
 
     /**
@@ -76,7 +68,7 @@ class BIP322 {
      * @param tapInternalKey Used to set the taproot internal public key of a taproot signing address when provided, default to undefined
      * @returns Ready-to-be-signed bitcoinjs.Psbt transaction
      */
-    public static buildToSignTx(toSpendTxId: string, witnessScript: Buffer, isRedeemScript: boolean = false, tapInternalKey: Buffer = undefined) {
+    public static buildToSignTx(toSpendTxId: string, witnessScript: Buffer, isRedeemScript: boolean = false, tapInternalKey?: Buffer) {
         // Create PSBT object for constructing the transaction
         const psbt = new bitcoin.Psbt();
         // Set default value for nVersion and nLockTime
