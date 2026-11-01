@@ -8,6 +8,7 @@
         "outDir": "dist",
         "rootDir": "src",
         "declaration": true,
+        "types": ["node", "mocha"],
         "baseUrl": ".",
         "paths": {
             "*": [

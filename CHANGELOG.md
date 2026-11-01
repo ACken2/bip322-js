@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed issue [#34](https://github.com/ACken2/bip322-js/issues/34), where `Signer.sign` and `Verifier.verifySignature` threw `Need a Utxo input item for input #0` on `bitcoinjs-lib` 7.0.4 and later. `BIP322.buildToSpendTx` now builds the `to_spend` transaction directly, because that transaction spends a prevout that does not exist.
+
 ## [4.0.0] - 2026-08-21
 
 ### Added
